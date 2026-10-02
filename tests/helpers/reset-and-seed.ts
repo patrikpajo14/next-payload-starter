@@ -1,17 +1,25 @@
-import type { CollectionSlug, Payload } from "payload";
+import type { Payload } from "payload";
+import pg from "pg";
 
 import { assertSafeTestDatabase } from "./safe-database";
 import { requiredEnv } from "./test-env";
 
-/** Deletes every document in every collection. Refuses to run outside a test database. */
-export async function resetDatabase(payload: Payload): Promise<void> {
+/**
+ * Drops and recreates the test database's `public` schema, so Payload pushes a
+ * fresh schema on start. Run it before Payload initialises: a schema left over
+ * from another branch's collections otherwise makes Payload's push stop at an
+ * interactive data-loss prompt that no test runner answers.
+ *
+ * Refuses to run outside a dedicated test database.
+ */
+export async function resetDatabase(): Promise<void> {
   assertSafeTestDatabase();
-  for (const { slug } of payload.config.collections) {
-    await payload.delete({
-      collection: slug as CollectionSlug,
-      where: { id: { exists: true } },
-      overrideAccess: true,
-    });
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+  } finally {
+    await client.end();
   }
 }
 
@@ -63,9 +71,4 @@ async function seedSiteChrome(payload: Payload): Promise<void> {
     },
     ...options,
   });
-}
-
-export async function resetAndSeed(payload: Payload): Promise<void> {
-  await resetDatabase(payload);
-  await seedBase(payload);
 }

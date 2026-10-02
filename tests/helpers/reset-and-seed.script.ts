@@ -3,9 +3,11 @@
 import config from "@payload-config";
 import { getPayload } from "payload";
 
-import { resetAndSeed } from "./reset-and-seed";
+import { resetDatabase, seedBase } from "./reset-and-seed";
 
+// Reset first: Payload pushes its schema while it initialises.
+await resetDatabase();
 const payload = await getPayload({ config });
-await resetAndSeed(payload);
+await seedBase(payload);
 console.log("Test database reset and seeded.");
 process.exit(0);
