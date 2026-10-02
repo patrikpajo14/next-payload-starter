@@ -46,3 +46,6 @@ next-env.d.ts
 # test output
 /playwright-report/
 /test-results/
+
+# Payload uploads on local disk (development and tests)
+/media/
