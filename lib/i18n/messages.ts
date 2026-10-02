@@ -4,17 +4,16 @@ import type { Locale } from "./locales";
  * Interface strings that belong to the application, not to Editors: the shell
  * and not-found page. Everything else on the site comes from Payload.
  */
-export const messages: Record<
-  Locale,
-  {
-    siteTitle: string;
-    welcome: string;
-    shellIntro: string;
-    notFoundTitle: string;
-    notFoundBody: string;
-    backToHome: string;
-  }
-> = {
+export interface Messages {
+  siteTitle: string;
+  welcome: string;
+  shellIntro: string;
+  notFoundTitle: string;
+  notFoundBody: string;
+  backToHome: string;
+}
+
+export const messages: Record<Locale, Messages> = {
   hr: {
     siteTitle: "Starter Site",
     welcome: "Dobrodošli",

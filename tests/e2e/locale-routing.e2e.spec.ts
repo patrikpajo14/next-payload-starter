@@ -85,7 +85,7 @@ test.describe("localized not-found page", () => {
     expect(response?.status()).toBe(404);
   });
 
-  test("an unsupported locale prefix is a 404", async ({ page }) => {
+  test("an unsupported locale prefix ends in a 404", async ({ page }) => {
     const response = await page.goto("/fr/anything");
 
     expect(response?.status()).toBe(404);
@@ -93,10 +93,16 @@ test.describe("localized not-found page", () => {
 });
 
 test.describe("paths outside locale handling", () => {
-  test("the admin is not prefixed with a Locale", async ({ page }) => {
-    await page.goto("/admin");
+  test("the admin is not sent to a Locale", async ({ request }) => {
+    const response = await request.get("/admin", { maxRedirects: 0 });
 
-    expect(new URL(page.url()).pathname).toMatch(/^\/admin(\/|$)/);
+    // Payload may redirect to its own login page, but never to /hr or /en.
+    const location = response.headers().location;
+    if (location) {
+      expect(locationOf(response.headers()).pathname).toMatch(/^\/admin(\/|$)/);
+    } else {
+      expect(response.status()).toBe(200);
+    }
   });
 
   test("the API is not redirected", async ({ request }) => {

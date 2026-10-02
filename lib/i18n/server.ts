@@ -4,6 +4,7 @@ import { locale } from "next/root-params";
 import { hasLocale } from "./locales";
 import type { Locale } from "./locales";
 import { messages } from "./messages";
+import type { Messages } from "./messages";
 
 /** The Locale of the current request. Server Components only. */
 export async function getLocale(): Promise<Locale> {
@@ -12,6 +13,6 @@ export async function getLocale(): Promise<Locale> {
   return current;
 }
 
-export async function getMessages() {
+export async function getMessages(): Promise<Messages> {
   return messages[await getLocale()];
 }

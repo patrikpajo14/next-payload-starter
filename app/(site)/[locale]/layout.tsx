@@ -17,7 +17,13 @@ const geistMono = Geist_Mono({
 });
 
 // Only the configured Locales exist; any other first segment is a 404.
+// Check before adding Article List and Article routes below this layout: the
+// docs don't say whether this also stops later pages being generated on first
+// request, which pagination relies on. Set `dynamicParams = true` on those pages.
 export const dynamicParams = false;
+
+// Safety net for time-based refresh; Editor saves revalidate on demand.
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));

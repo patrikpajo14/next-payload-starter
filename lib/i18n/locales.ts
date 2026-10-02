@@ -11,6 +11,13 @@ export const localeLabels: Record<Locale, string> = {
   en: "English",
 };
 
+/** True when a URL path starts with a supported Locale segment, such as `/hr` or `/en/articles`. */
+export function hasLocalePrefix(pathname: string): boolean {
+  return locales.some(
+    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
+  );
+}
+
 export function hasLocale(value: string): value is Locale {
   return (locales as readonly string[]).includes(value);
 }
