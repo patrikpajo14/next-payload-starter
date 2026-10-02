@@ -17,11 +17,13 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@formatjs/intl-localematcher": "0.9.0",
     "@payloadcms/db-postgres": "3.90.2",
     "@payloadcms/next": "3.90.2",
     "@payloadcms/richtext-lexical": "3.90.2",
     "@payloadcms/translations": "3.90.2",
     "graphql": "16.14.2",
+    "negotiator": "1.1.0",
     "next": "16.3.8",
     "payload": "3.90.2",
     "react": "19.2.8",
@@ -31,6 +33,7 @@
   "devDependencies": {
     "@playwright/test": "1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@types/negotiator": "0.6.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
