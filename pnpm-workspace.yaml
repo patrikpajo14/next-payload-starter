@@ -1,4 +1,6 @@
 allowBuilds:
   esbuild: true
+  # sharp ships prebuilt binaries (@img/sharp-*) for macOS and Linux, including
+  # Linux musl for Docker, so its install script, which only compiles from source, stays off.
   sharp: false
   unrs-resolver: false
