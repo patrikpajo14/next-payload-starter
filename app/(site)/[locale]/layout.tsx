@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Only the configured Locales exist; any other first segment is a 404.
-// Check before adding Article List and Article routes below this layout: the
-// docs don't say whether this also stops later pages being generated on first
-// request, which pagination relies on. Set `dynamicParams = true` on those pages.
-export const dynamicParams = false;
+// Pages must render on demand: `revalidateTag(tag, { expire: 0 })` drops their
+// cached copy, and with `dynamicParams = false` Next answers that cache miss
+// with a 404 instead of rendering again. Unknown Locales still 404: the proxy
+// redirects them, and `getLocale()` calls `notFound()` for any that slip past.
+export const dynamicParams = true;
 
 // Safety net for time-based refresh; Editor saves revalidate on demand.
 export const revalidate = 3600;
