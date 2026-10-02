@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# keep the committed env template
+!.env.example
+
+# test output
+/playwright-report/
+/test-results/
