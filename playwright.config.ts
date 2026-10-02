@@ -9,7 +9,6 @@ const env = loadTestEnv();
 // so a running `pnpm dev` is never reused or disturbed.
 export default defineConfig({
   testDir: "./tests/e2e",
-  globalSetup: "./tests/e2e/global-setup.ts",
   // One shared database: never run tests at the same time.
   fullyParallel: false,
   workers: 1,
@@ -29,7 +28,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm build && pnpm start --port ${PORT}`,
+    // Reset and seed before building: Playwright starts the web server before
+    // any globalSetup, and the build prerenders Pages from the database.
+    command: `pnpm payload run tests/helpers/reset-and-seed.script.ts && pnpm build && pnpm start --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 300_000,

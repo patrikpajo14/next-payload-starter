@@ -25,6 +25,44 @@ export async function seedBase(payload: Payload): Promise<void> {
     },
     overrideAccess: true,
   });
+  await seedSiteChrome(payload);
+}
+
+/** Header and Footer in both Locales. Written outside Next.js, so revalidation is skipped. */
+async function seedSiteChrome(payload: Payload): Promise<void> {
+  const options = { overrideAccess: true, context: { disableRevalidate: true } };
+
+  await payload.updateGlobal({
+    slug: "header",
+    locale: "hr",
+    data: { navItems: [{ label: "Članci", url: "/hr/clanci" }] },
+    ...options,
+  });
+  await payload.updateGlobal({
+    slug: "header",
+    locale: "en",
+    data: { navItems: [{ label: "Articles", url: "/en/articles" }] },
+    ...options,
+  });
+
+  await payload.updateGlobal({
+    slug: "footer",
+    locale: "hr",
+    data: {
+      text: "Starter Site, sva prava pridržana.",
+      links: [{ label: "Politika privatnosti", url: "/hr/politika-privatnosti" }],
+    },
+    ...options,
+  });
+  await payload.updateGlobal({
+    slug: "footer",
+    locale: "en",
+    data: {
+      text: "Starter Site, all rights reserved.",
+      links: [{ label: "Privacy policy", url: "/en/privacy-policy" }],
+    },
+    ...options,
+  });
 }
 
 export async function resetAndSeed(payload: Payload): Promise<void> {
