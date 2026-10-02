@@ -3,7 +3,14 @@ import path from "node:path";
 import { parse } from "dotenv";
 
 /** Env files whose database URLs must never be the target of a test reset. */
-const PROTECTED_ENV_FILES = [".env", ".env.development", ".env.production"];
+const PROTECTED_ENV_FILES = [
+  ".env",
+  ".env.local",
+  ".env.development",
+  ".env.development.local",
+  ".env.production",
+  ".env.production.local",
+];
 
 /**
  * Neon serves the same compute endpoint through a pooled host
@@ -59,7 +66,7 @@ export function assertSafeTestDatabase(
   const clash = protectedUrls.some((url) => endpointOf(url) === testEndpoint);
   if (clash) {
     throw new Error(
-      "TEST_DATABASE_URL points at the same database server as .env, .env.development or .env.production. Use a dedicated test branch.",
+      "TEST_DATABASE_URL points at the same database server as a .env, .env.local, .env.development or .env.production file. Use a dedicated test branch.",
     );
   }
 }

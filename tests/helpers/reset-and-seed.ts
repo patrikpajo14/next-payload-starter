@@ -1,14 +1,7 @@
 import type { CollectionSlug, Payload } from "payload";
 
 import { assertSafeTestDatabase } from "./safe-database";
-
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} is not set. See the test section of .env.example.`);
-  }
-  return value;
-}
+import { requiredEnv } from "./test-env";
 
 /** Deletes every document in every collection. Refuses to run outside a test database. */
 export async function resetDatabase(payload: Payload): Promise<void> {

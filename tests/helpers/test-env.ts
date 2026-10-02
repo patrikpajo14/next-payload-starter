@@ -6,6 +6,15 @@ import { assertSafeTestDatabase } from "./safe-database";
 /** Secret for the app under test. Never the real one: it only signs test sessions. */
 const TEST_PAYLOAD_SECRET = "test-only-secret-not-for-production";
 
+/** Reads a variable the tests cannot run without. */
+export function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is not set. See the test section of .env.example.`);
+  }
+  return value;
+}
+
 /**
  * Loads `.env.test` and points DATABASE_URL at the test database.
  *

@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-const email = process.env.TEST_EDITOR_EMAIL ?? "";
-const password = process.env.TEST_EDITOR_PASSWORD ?? "";
+import { requiredEnv } from "../helpers/test-env";
+
+const email = requiredEnv("TEST_EDITOR_EMAIL");
+const password = requiredEnv("TEST_EDITOR_PASSWORD");
 
 test("the site responds", async ({ page }) => {
   const response = await page.goto("/");
