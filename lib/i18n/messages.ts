@@ -11,6 +11,9 @@ export interface Messages {
   notFoundTitle: string;
   notFoundBody: string;
   backToHome: string;
+  mainNavigation: string;
+  footerNavigation: string;
+  languageSwitcher: string;
 }
 
 export const messages: Record<Locale, Messages> = {
@@ -21,6 +24,9 @@ export const messages: Record<Locale, Messages> = {
     notFoundTitle: "Stranica nije pronađena",
     notFoundBody: "Stranica koju tražite ne postoji ili je premještena.",
     backToHome: "Natrag na početnu",
+    mainNavigation: "Glavna navigacija",
+    footerNavigation: "Poveznice u podnožju",
+    languageSwitcher: "Odabir jezika",
   },
   en: {
     siteTitle: "Starter Site",
@@ -29,5 +35,8 @@ export const messages: Record<Locale, Messages> = {
     notFoundTitle: "Page not found",
     notFoundBody: "The page you are looking for does not exist or has moved.",
     backToHome: "Back to the homepage",
+    mainNavigation: "Main navigation",
+    footerNavigation: "Footer links",
+    languageSwitcher: "Choose language",
   },
 };

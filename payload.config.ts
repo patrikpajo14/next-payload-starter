@@ -5,6 +5,8 @@ import { hr } from "@payloadcms/translations/languages/hr";
 import { buildConfig } from "payload";
 
 import { Users } from "./collections/Users";
+import { Footer } from "./globals/Footer";
+import { Header } from "./globals/Header";
 import { defaultLocale, localeLabels, locales } from "./lib/i18n/locales";
 
 export default buildConfig({
@@ -12,6 +14,7 @@ export default buildConfig({
     user: Users.slug,
   },
   collections: [Users],
+  globals: [Header, Footer],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET ?? "",
   db: postgresAdapter({
