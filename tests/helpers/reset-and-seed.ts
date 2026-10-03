@@ -1,17 +1,27 @@
-import type { CollectionSlug, Payload } from "payload";
+import type { Payload } from "payload";
+import pg from "pg";
 
+import { testWrite } from "./local-api";
+import { paragraphs } from "./rich-text";
 import { assertSafeTestDatabase } from "./safe-database";
 import { requiredEnv } from "./test-env";
 
-/** Deletes every document in every collection. Refuses to run outside a test database. */
-export async function resetDatabase(payload: Payload): Promise<void> {
+/**
+ * Drops and recreates the test database's `public` schema, so Payload pushes a
+ * fresh schema on start. Run it before Payload initialises: a schema left over
+ * from another branch's collections otherwise makes Payload's push stop at an
+ * interactive data-loss prompt that no test runner answers.
+ *
+ * Refuses to run outside a dedicated test database.
+ */
+export async function resetDatabase(): Promise<void> {
   assertSafeTestDatabase();
-  for (const { slug } of payload.config.collections) {
-    await payload.delete({
-      collection: slug as CollectionSlug,
-      where: { id: { exists: true } },
-      overrideAccess: true,
-    });
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+  } finally {
+    await client.end();
   }
 }
 
@@ -26,23 +36,23 @@ export async function seedBase(payload: Payload): Promise<void> {
     overrideAccess: true,
   });
   await seedSiteChrome(payload);
+  await seedStandaloneArticles(payload);
 }
 
 /** Header and Footer in both Locales. Written outside Next.js, so revalidation is skipped. */
 async function seedSiteChrome(payload: Payload): Promise<void> {
-  const options = { overrideAccess: true, context: { disableRevalidate: true } };
 
   await payload.updateGlobal({
     slug: "header",
     locale: "hr",
     data: { navItems: [{ label: "Članci", url: "/hr/clanci" }] },
-    ...options,
+    ...testWrite,
   });
   await payload.updateGlobal({
     slug: "header",
     locale: "en",
     data: { navItems: [{ label: "Articles", url: "/en/articles" }] },
-    ...options,
+    ...testWrite,
   });
 
   await payload.updateGlobal({
@@ -52,7 +62,7 @@ async function seedSiteChrome(payload: Payload): Promise<void> {
       text: "Starter Site, sva prava pridržana.",
       links: [{ label: "Politika privatnosti", url: "/hr/politika-privatnosti" }],
     },
-    ...options,
+    ...testWrite,
   });
   await payload.updateGlobal({
     slug: "footer",
@@ -61,11 +71,61 @@ async function seedSiteChrome(payload: Payload): Promise<void> {
       text: "Starter Site, all rights reserved.",
       links: [{ label: "Privacy policy", url: "/en/privacy-policy" }],
     },
-    ...options,
+    ...testWrite,
   });
 }
 
-export async function resetAndSeed(payload: Payload): Promise<void> {
-  await resetDatabase(payload);
-  await seedBase(payload);
+/** A nameless Category with the privacy policy in both Locales and one Croatian-only Article. */
+async function seedStandaloneArticles(payload: Payload): Promise<void> {
+  const publishedAt = "2026-01-15T00:00:00.000Z";
+
+  const general = await payload.create({
+    collection: "categories",
+    locale: "hr",
+    data: { title: "Općenito" },
+    ...testWrite,
+  });
+  await payload.update({
+    collection: "categories",
+    id: general.id,
+    locale: "en",
+    data: { title: "General" },
+    ...testWrite,
+  });
+
+  const privacy = await payload.create({
+    collection: "articles",
+    locale: "hr",
+    data: {
+      title: "Politika privatnosti",
+      slug: "politika-privatnosti",
+      body: paragraphs("Vaši podaci su sigurni."),
+      category: general.id,
+      publishedAt,
+    },
+    ...testWrite,
+  });
+  await payload.update({
+    collection: "articles",
+    id: privacy.id,
+    locale: "en",
+    data: {
+      title: "Privacy policy",
+      slug: "privacy-policy",
+      body: paragraphs("Your data is safe."),
+    },
+    ...testWrite,
+  });
+
+  await payload.create({
+    collection: "articles",
+    locale: "hr",
+    data: {
+      title: "Samo na hrvatskom",
+      slug: "samo-hrvatski",
+      category: general.id,
+      publishedAt,
+    },
+    ...testWrite,
+  });
 }

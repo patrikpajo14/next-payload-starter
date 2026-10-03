@@ -1,5 +1,9 @@
 import { revalidateTag } from "next/cache";
-import type { GlobalAfterChangeHook } from "payload";
+import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
+  GlobalAfterChangeHook,
+} from "payload";
 
 /**
  * Tag carried by every piece of cached data that appears on all Pages (Header,
@@ -24,4 +28,24 @@ export function revalidateAllPages(): void {
  */
 export const revalidateAllPagesAfterChange: GlobalAfterChangeHook = ({ context }) => {
   if (!context.disableRevalidate) revalidateAllPages();
+};
+
+/**
+ * Tag carried by every cached read of Articles and Categories, including the
+ * lookups that end in a 404, so a newly published slug stops 404ing at once.
+ */
+export const CONTENT_TAG = "content";
+
+function revalidateContent(context: Record<string, unknown>): void {
+  if (!context.disableRevalidate) revalidateTag(CONTENT_TAG, { expire: 0 });
+}
+
+/** `afterChange` hook for Articles and Categories. Honours `disableRevalidate` like the globals. */
+export const revalidateContentAfterChange: CollectionAfterChangeHook = ({ context }) => {
+  revalidateContent(context);
+};
+
+/** `afterDelete` hook for Articles and Categories. */
+export const revalidateContentAfterDelete: CollectionAfterDeleteHook = ({ context }) => {
+  revalidateContent(context);
 };

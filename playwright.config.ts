@@ -30,7 +30,9 @@ export default defineConfig({
   webServer: {
     // Reset and seed before building: Playwright starts the web server before
     // any globalSetup, and the build prerenders Pages from the database.
-    command: `pnpm payload run tests/helpers/reset-and-seed.script.ts && pnpm build && pnpm start --port ${PORT}`,
+    // Next's data cache (unstable_cache) survives `next build`, so clear it too,
+    // or a run would serve data cached from the previous run's database.
+    command: `pnpm payload run tests/helpers/reset-and-seed.script.ts && rm -rf .next/cache/fetch-cache && pnpm build && pnpm start --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     timeout: 300_000,
