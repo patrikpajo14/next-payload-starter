@@ -21,6 +21,12 @@ export const Categories: CollectionConfig = {
           "URL segment of the Article List in this Locale. Leave empty to serve this Category's Articles directly under the Locale (Standalone Articles).",
       },
     },
+    {
+      name: "intro",
+      type: "textarea",
+      localized: true,
+      admin: { description: "Shown above the Article List in this Locale." },
+    },
   ],
   hooks: {
     afterChange: [revalidateContentAfterChange],

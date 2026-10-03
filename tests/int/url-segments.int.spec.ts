@@ -4,6 +4,7 @@ import type { Payload } from "payload";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { Locale } from "../../lib/i18n/locales";
+import { pageNumber } from "../../lib/url-segments";
 import { testWrite } from "../helpers/local-api";
 import { paragraphs } from "../helpers/rich-text";
 
@@ -290,5 +291,51 @@ describe("Drafts claim the same rules", () => {
     });
 
     expect(await rejection(save, "slug")).toBeDefined();
+  });
+});
+
+describe("validation that reads other Locales", () => {
+  // The slug and Category rules read the Article in every Locale. Those reads
+  // must not change which Locale the save itself writes.
+  it("saves an edit in the Locale being edited", async () => {
+    const named = await createCategory("hr", { title: "Bilješke", seoName: "biljeske" });
+    const article = await createArticle("hr", { title: "Bilješka", slug: "biljeska", category: named.id });
+    await payload.update({
+      collection: "articles",
+      id: article.id,
+      locale: "en",
+      data: { title: "Note", slug: "note" },
+      ...testWrite,
+    });
+
+    await payload.update({
+      collection: "articles",
+      id: article.id,
+      locale: "hr",
+      data: { title: "Bilješka, izmijenjena" },
+      ...testWrite,
+    });
+
+    const saved = await payload.findByID({
+      collection: "articles",
+      id: article.id,
+      locale: "all",
+      depth: 0,
+      overrideAccess: true,
+    });
+    expect(saved.title).toEqual({ hr: "Bilješka, izmijenjena", en: "Note" });
+  });
+});
+
+describe("Article List page numbers in the second segment", () => {
+  it("reads canonical numbers as pages", () => {
+    expect(pageNumber("1")).toBe(1);
+    expect(pageNumber("12")).toBe(12);
+  });
+
+  it("reads nothing else as a page", () => {
+    for (const segment of ["0", "02", "-1", "1.5", "2a", "moj-clanak", ""]) {
+      expect(pageNumber(segment)).toBeUndefined();
+    }
   });
 });
