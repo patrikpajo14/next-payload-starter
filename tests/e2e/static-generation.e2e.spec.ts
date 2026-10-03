@@ -5,7 +5,12 @@ import { expect, test } from "@playwright/test";
 // cached Pages, so only a first request straight after the build proves a Page
 // was generated at build time.
 
-for (const path of ["/hr/politika-privatnosti", "/hr/clanci/moj-clanak"]) {
+for (const path of [
+  "/hr/politika-privatnosti",
+  "/hr/clanci/moj-clanak",
+  "/hr/clanci",
+  "/en/articles",
+]) {
   test(`${path} is generated at build time`, async ({ request }) => {
     const response = await request.get(path);
 

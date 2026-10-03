@@ -160,14 +160,14 @@ async function seedCategoryArticles(payload: Payload): Promise<void> {
   const articlesCategory = await payload.create({
     collection: "categories",
     locale: "hr",
-    data: { title: "Članci", seoName: "clanci" },
+    data: { title: "Članci", seoName: "clanci", intro: "Novosti i priče našeg tima." },
     ...testWrite,
   });
   await payload.update({
     collection: "categories",
     id: articlesCategory.id,
     locale: "en",
-    data: { title: "Articles", seoName: "articles" },
+    data: { title: "Articles", seoName: "articles", intro: "News and stories from our team." },
     ...testWrite,
   });
 
@@ -193,6 +193,52 @@ async function seedCategoryArticles(payload: Payload): Promise<void> {
       title: "My article",
       slug: "my-article",
       body: paragraphs("The text of my article."),
+      _status: "published",
+    },
+    ...testWrite,
+  });
+
+  await seedArticleList(payload, articlesCategory.id);
+}
+
+/**
+ * Fills the Articles Category past one Article List page: "Članak 1" to
+ * "Članak 10" (English "Article 1" to "Article 10"), one a day from 1 March
+ * 2026, so "Članak 10" is the newest. With "Moj članak" (1 February) that is 11
+ * Articles in each Locale, plus "Samo hrvatski članak" (20 January) in Croatian
+ * only: 12 Croatian, 11 English, two list pages each.
+ */
+async function seedArticleList(payload: Payload, categoryId: number): Promise<void> {
+  for (let n = 1; n <= 10; n++) {
+    const article = await payload.create({
+      collection: "articles",
+      locale: "hr",
+      data: {
+        title: `Članak ${n}`,
+        slug: `clanak-${n}`,
+        category: categoryId,
+        publishedAt: `2026-03-${String(n).padStart(2, "0")}T00:00:00.000Z`,
+        _status: "published",
+      },
+      ...testWrite,
+    });
+    await payload.update({
+      collection: "articles",
+      id: article.id,
+      locale: "en",
+      data: { title: `Article ${n}`, slug: `article-${n}`, _status: "published" },
+      ...testWrite,
+    });
+  }
+
+  await payload.create({
+    collection: "articles",
+    locale: "hr",
+    data: {
+      title: "Samo hrvatski članak",
+      slug: "samo-hrvatski-clanak",
+      category: categoryId,
+      publishedAt: "2026-01-20T00:00:00.000Z",
       _status: "published",
     },
     ...testWrite,

@@ -28,6 +28,27 @@ export function hostsStandaloneArticles(category: Category | number | null | und
   return typeof category === "object" && category !== null && !category.seoName;
 }
 
+/**
+ * The Article List page number in a second segment (`/hr/clanci/2`), or
+ * undefined when the segment is not one. Only canonical numbers count: `0` and
+ * `02` are not pages. Page 1 is served without a number; `next.config.ts`
+ * redirects `/1` there.
+ */
+export function pageNumber(segment: string): number | undefined {
+  return /^[1-9]\d*$/.test(segment) ? Number(segment) : undefined;
+}
+
+/** The address of Article List page `page`: page 1 has no number. */
+export function articleListPath(locale: Locale, seoName: string, page: number): string {
+  const base = `/${locale}/${seoName}`;
+  return page === 1 ? base : `${base}/${page}`;
+}
+
+/** The address of an Article in a named Category. */
+export function categoryArticlePath(locale: Locale, seoName: string, slug: string): string {
+  return `/${locale}/${seoName}/${slug}`;
+}
+
 /** The id behind a relationship value, populated or not. */
 function relationId(value: unknown): number | undefined {
   if (typeof value === "number") return value;
@@ -80,6 +101,18 @@ function writeLocale(req: PayloadRequest): Locale {
   return req.locale && hasLocale(req.locale) ? req.locale : defaultLocale;
 }
 
+/**
+ * A request for one Local API read made while validating a save: the save's
+ * transaction and user, but its own object. A Local API call writes its
+ * `locale` onto the `req` it is given, and the save writes in `req.locale`.
+ * Field validators run concurrently, so restoring the Locale afterwards can't
+ * work: every read gets a request of its own.
+ */
+function readRequest(req: PayloadRequest): Partial<PayloadRequest> {
+  const { payload, transactionID, user, context, i18n, t } = req;
+  return { payload, transactionID, user, context, i18n, t };
+}
+
 interface Claim {
   req: PayloadRequest;
   locale: Locale;
@@ -95,7 +128,12 @@ interface Claim {
  * belong to the Category being saved.
  */
 async function isTaken({ req, locale, value, ignoreCategory, ignoreArticle }: Claim) {
-  const read = { req, locale, fallbackLocale: false, overrideAccess: true } as const;
+  const read = {
+    req: readRequest(req),
+    locale,
+    fallbackLocale: false,
+    overrideAccess: true,
+  } as const;
 
   const categories = await req.payload.find({
     ...read,
@@ -138,7 +176,7 @@ async function isTaken({ req, locale, value, ignoreCategory, ignoreArticle }: Cl
  */
 async function articlesWouldCollide(req: PayloadRequest, locale: Locale, category: number | string) {
   const { docs } = await req.payload.find({
-    req,
+    req: readRequest(req),
     locale,
     fallbackLocale: false,
     overrideAccess: true,
@@ -194,7 +232,7 @@ async function articleSlugProblem(
     const category = await req.payload.findByID({
       collection: "categories",
       id: categoryId,
-      req,
+      req: readRequest(req),
       locale,
       fallbackLocale: false,
       depth: 0,
@@ -221,7 +259,7 @@ async function siblingHasSlug({
 }: Claim & { categoryId: number }): Promise<boolean> {
   const { totalDocs } = await req.payload.count({
     collection: "articles",
-    req,
+    req: readRequest(req),
     locale,
     overrideAccess: true,
     where: {
@@ -275,7 +313,7 @@ async function savedSlug(req: PayloadRequest, locale: Locale, id: number | strin
   const article = await req.payload.findByID({
     collection: "articles",
     id,
-    req,
+    req: readRequest(req),
     locale,
     fallbackLocale: false,
     depth: 0,

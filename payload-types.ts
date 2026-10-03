@@ -201,6 +201,10 @@ export interface Category {
    * URL segment of the Article List in this Locale. Leave empty to serve this Category's Articles directly under the Locale (Standalone Articles).
    */
   seoName?: string | null;
+  /**
+   * Shown above the Article List in this Locale.
+   */
+  intro?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -391,6 +395,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   seoName?: T;
+  intro?: T;
   updatedAt?: T;
   createdAt?: T;
 }

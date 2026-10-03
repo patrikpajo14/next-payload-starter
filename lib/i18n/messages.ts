@@ -14,6 +14,10 @@ export interface Messages {
   mainNavigation: string;
   footerNavigation: string;
   languageSwitcher: string;
+  /** Label of the Article List's page links. */
+  pagination: string;
+  /** Page title suffix for Article List page `n`. */
+  pageNumber: (n: number) => string;
 }
 
 export const messages: Record<Locale, Messages> = {
@@ -27,6 +31,8 @@ export const messages: Record<Locale, Messages> = {
     mainNavigation: "Glavna navigacija",
     footerNavigation: "Poveznice u podnožju",
     languageSwitcher: "Odabir jezika",
+    pagination: "Stranice",
+    pageNumber: (n) => `stranica ${n}`,
   },
   en: {
     siteTitle: "Starter Site",
@@ -38,5 +44,7 @@ export const messages: Record<Locale, Messages> = {
     mainNavigation: "Main navigation",
     footerNavigation: "Footer links",
     languageSwitcher: "Choose language",
+    pagination: "Pages",
+    pageNumber: (n) => `page ${n}`,
   },
 };
