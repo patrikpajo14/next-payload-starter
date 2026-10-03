@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { APIRequestContext, Page } from "@playwright/test";
 
 import type { Locale } from "../../lib/i18n/locales";
-import { requiredEnv } from "../helpers/test-env";
+import { editorHeaders } from "../helpers/editor-api";
 
 const header = (page: Page) => page.getByRole("banner");
 const footer = (page: Page) => page.getByRole("contentinfo");
@@ -85,19 +85,6 @@ test.describe("language switcher", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "hr");
   });
 });
-
-/** Signs in as the seeded Editor through the REST API and returns auth headers. */
-async function editorHeaders(request: APIRequestContext) {
-  const response = await request.post("/api/users/login", {
-    data: {
-      email: requiredEnv("TEST_EDITOR_EMAIL"),
-      password: requiredEnv("TEST_EDITOR_PASSWORD"),
-    },
-  });
-  expect(response.ok()).toBe(true);
-  const { token } = await response.json();
-  return { Authorization: `JWT ${token}` };
-}
 
 /** Saves a global the way the admin does: an authenticated REST update. */
 async function saveGlobal(

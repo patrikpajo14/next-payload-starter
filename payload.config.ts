@@ -5,6 +5,8 @@ import { hr } from "@payloadcms/translations/languages/hr";
 import { buildConfig } from "payload";
 import sharp from "sharp";
 
+import { Articles } from "./collections/Articles";
+import { Categories } from "./collections/Categories";
 import { Media } from "./collections/Media";
 import { Users } from "./collections/Users";
 import { Footer } from "./globals/Footer";
@@ -16,7 +18,7 @@ export default buildConfig({
   admin: {
     user: Users.slug,
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Categories, Articles],
   globals: [Header, Footer],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET ?? "",
