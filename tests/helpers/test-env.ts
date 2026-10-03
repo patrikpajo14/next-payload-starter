@@ -39,6 +39,10 @@ export function loadTestEnv(cwd = process.cwd()): Record<string, string> {
 
   process.env.TEST_DATABASE_URL = testUrl;
   process.env.DATABASE_URL = testUrl;
+  // Tests store media on local disk. Next and Payload load `.env` in every mode
+  // but never overwrite a variable that is already set, so an empty S3_BUCKET
+  // keeps a developer's real bucket out of test runs.
+  process.env.S3_BUCKET = "";
   process.env.PAYLOAD_SECRET = process.env.TEST_PAYLOAD_SECRET ?? TEST_PAYLOAD_SECRET;
   assertSafeTestDatabase();
 
@@ -46,6 +50,7 @@ export function loadTestEnv(cwd = process.cwd()): Record<string, string> {
     DATABASE_URL: testUrl,
     PAYLOAD_SECRET: process.env.PAYLOAD_SECRET,
     TEST_DATABASE_URL: testUrl,
+    S3_BUCKET: "",
     TEST_EDITOR_EMAIL: process.env.TEST_EDITOR_EMAIL ?? "",
     TEST_EDITOR_PASSWORD: process.env.TEST_EDITOR_PASSWORD ?? "",
   };
