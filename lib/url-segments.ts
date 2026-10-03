@@ -7,10 +7,12 @@ import { defaultLocale, hasLocale, locales } from "./i18n/locales";
 import type { Locale } from "./i18n/locales";
 
 /**
- * Rules for the URL segment right after the Locale (`/hr/<segment>`).
+ * Rules for the URL segments after the Locale.
  *
- * Category SEO Names and Standalone Article slugs share that position, so they
- * share one namespace per Locale. Numbers are rejected so a later segment can
+ * First segment (`/hr/<segment>`): Category SEO Names and Standalone Article
+ * slugs share that position, so they share one namespace per Locale.
+ * Second segment (`/hr/<seo-name>/<slug>`): an Article's slug is unique among
+ * the Articles of its named Category. Numbers are rejected so a later segment can
  * be read as a page number, and `admin` and `api` would shadow Payload.
  *
  * The database can't express these rules, so they run as field validation:
@@ -35,7 +37,7 @@ function relationId(value: unknown): number | undefined {
   return undefined;
 }
 
-type Problem = "format" | "numeric" | "reserved" | "taken" | "articlesCollide";
+type Problem = "format" | "numeric" | "reserved" | "taken" | "takenInCategory" | "articlesCollide";
 
 /** The language of the admin UI, which Editors pick separately from content Locales. */
 type AdminLanguage = "hr" | "en";
@@ -46,6 +48,7 @@ const problems: Record<AdminLanguage, Record<Problem, string>> = {
     numeric: "Vrijednost ne smije biti samo broj.",
     reserved: "Ova vrijednost je rezervirana.",
     taken: "Ovu adresu već koristi druga kategorija ili samostalni članak na ovom jeziku.",
+    takenInCategory: "Drugi članak u ovoj kategoriji već koristi ovu adresu na ovom jeziku.",
     articlesCollide:
       "Bez SEO naziva članci ove kategorije postali bi samostalni, a adresa nekog od njih već je zauzeta.",
   },
@@ -54,6 +57,7 @@ const problems: Record<AdminLanguage, Record<Problem, string>> = {
     numeric: "The value can't be a number only.",
     reserved: "This value is reserved.",
     taken: "Another Category or Standalone Article already uses this address in this Locale.",
+    takenInCategory: "Another Article in this Category already uses this address in this Locale.",
     articlesCollide:
       "Without an SEO Name this Category's Articles become Standalone Articles, and one of their addresses is taken.",
   },
@@ -171,16 +175,18 @@ export const validateSeoName: Validate<string> = async (value, { req, id }) => {
 };
 
 /**
- * True when the Article, in the given Category, would take an address already
- * in use in any Locale where that Category hosts Standalone Articles.
- * `slugs` holds the slugs being saved; other Locales use the stored ones.
+ * Why the Article, in the given Category, can't have its address in some
+ * Locale, or undefined when it can. Where the Category hosts Standalone
+ * Articles the shared namespace applies; in a named Category, the slugs of its
+ * other Articles. `slugs` holds the slugs being saved; other Locales use the
+ * stored ones.
  */
-async function standaloneSlugTaken(
+async function articleSlugProblem(
   req: PayloadRequest,
   id: number | string | undefined,
   categoryId: number,
   slugs: Partial<Record<Locale, string>>,
-): Promise<boolean> {
+): Promise<Problem | undefined> {
   for (const locale of locales) {
     const slug = slugs[locale] ?? (await savedSlug(req, locale, id));
     if (!slug) continue;
@@ -195,11 +201,38 @@ async function standaloneSlugTaken(
       overrideAccess: true,
       disableErrors: true,
     });
-    if (!hostsStandaloneArticles(category)) continue;
 
-    if (await isTaken({ req, locale, value: slug, ignoreArticle: id })) return true;
+    if (hostsStandaloneArticles(category)) {
+      if (await isTaken({ req, locale, value: slug, ignoreArticle: id })) return "taken";
+    } else if (await siblingHasSlug({ req, locale, value: slug, categoryId, ignoreArticle: id })) {
+      return "takenInCategory";
+    }
   }
-  return false;
+  return undefined;
+}
+
+/** True when another Article of the Category already uses the slug in this Locale. */
+async function siblingHasSlug({
+  req,
+  locale,
+  value,
+  categoryId,
+  ignoreArticle,
+}: Claim & { categoryId: number }): Promise<boolean> {
+  const { totalDocs } = await req.payload.count({
+    collection: "articles",
+    req,
+    locale,
+    overrideAccess: true,
+    where: {
+      and: [
+        { slug: { equals: value } },
+        { category: { equals: categoryId } },
+        ...(ignoreArticle === undefined ? [] : [{ id: { not_equals: ignoreArticle } }]),
+      ],
+    },
+  });
+  return totalDocs > 0;
 }
 
 /** Validates an Article's slug in the Locale being edited. */
@@ -212,8 +245,8 @@ export const validateArticleSlug: Validate<string> = async (value, { req, id, da
   const categoryId = relationId((data as { category?: unknown })?.category);
   if (categoryId === undefined) return true;
 
-  const taken = await standaloneSlugTaken(req, id, categoryId, { [writeLocale(req)]: value });
-  return taken ? message(req, "taken") : true;
+  const slugProblem = await articleSlugProblem(req, id, categoryId, { [writeLocale(req)]: value });
+  return slugProblem ? message(req, slugProblem) : true;
 };
 
 /**
@@ -232,8 +265,8 @@ export const validateArticleCategory: RelationshipFieldValidation = async (value
 
   const slug = (data as { slug?: unknown })?.slug;
   const editing = typeof slug === "string" && slug ? { [writeLocale(req)]: slug } : {};
-  const taken = await standaloneSlugTaken(req, id, categoryId, editing);
-  return taken ? message(req, "taken") : true;
+  const slugProblem = await articleSlugProblem(req, id, categoryId, editing);
+  return slugProblem ? message(req, slugProblem) : true;
 };
 
 /** The Article's stored slug in another Locale, if it has been saved there. */

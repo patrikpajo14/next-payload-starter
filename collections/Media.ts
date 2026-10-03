@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload";
 
+import { revalidateContentAfterChange, revalidateContentAfterDelete } from "../lib/cache";
+
 /**
  * Images Editors upload. Files go to local disk (`media/`) unless S3 storage
  * is configured, see `lib/media-storage.ts`.
@@ -20,4 +22,9 @@ export const Media: CollectionConfig = {
     adminThumbnail: "thumbnail",
   },
   fields: [{ name: "alt", type: "text", required: true, localized: true }],
+  // Pages show images through cached Article reads; a new file or alt text refreshes them.
+  hooks: {
+    afterChange: [revalidateContentAfterChange],
+    afterDelete: [revalidateContentAfterDelete],
+  },
 };

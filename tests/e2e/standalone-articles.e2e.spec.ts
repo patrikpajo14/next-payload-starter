@@ -10,13 +10,6 @@ import { paragraphs } from "../helpers/rich-text";
 // Locales, and an Article that exists only in Croatian.
 
 test.describe("Standalone Article", () => {
-  // First in this file, so no earlier request can have generated the Page on demand.
-  test("is generated at build time", async ({ request }) => {
-    const response = await request.get("/hr/politika-privatnosti");
-
-    expect(response.headers()["x-nextjs-cache"]).toBe("HIT");
-  });
-
   test("is served in Croatian at its Croatian slug", async ({ page }) => {
     const response = await page.goto("/hr/politika-privatnosti");
 
@@ -105,6 +98,7 @@ test.describe("revalidation after an Editor saves", () => {
         slug: "novi-clanak",
         category,
         body: paragraphs("Upravo objavljeno."),
+        _status: "published",
       },
     });
     expect(created.ok()).toBe(true);
@@ -137,7 +131,7 @@ test("an Editor creates a nameless Category and a Standalone Article in the admi
   await page.getByRole("textbox", { name: /^Slug/ }).fill("uvjeti-koristenja");
   await page.locator("#field-category").click();
   await page.getByRole("option", { name: "Pravne stranice" }).click();
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Publish changes" }).click();
   await expect(page).toHaveURL(/\/admin\/collections\/articles\/\d+/);
 
   const response = await page.goto("/hr/uvjeti-koristenja");

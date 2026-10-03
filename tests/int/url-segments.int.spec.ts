@@ -204,13 +204,91 @@ describe("changes that move Articles in or out of the shared namespace", () => {
       category: await namelessCategory(),
       publishedAt: "2020-01-01T00:00:00.000Z",
     });
-    const named = await createCategory("hr", { title: "Mnogo", seoName: "mnogo" });
+    // Slugs are unique within a Category, so each needs its own named Category.
     for (let i = 0; i < 10; i++) {
+      const named = await createCategory("hr", { title: `Mnogo ${i}`, seoName: `mnogo-${i}` });
       await createArticle("hr", { title: `Isti ${i}`, slug: "isti", category: named.id });
     }
 
     expect(
       await rejection(createCategory("hr", { title: "Isti", seoName: "isti" }), "seoName"),
     ).toBeDefined();
+  }, 120_000); // 21 validated writes against a remote database
+});
+
+describe("Article slugs inside a named Category", () => {
+  it("rejects a slug another Article in the same Category uses", async () => {
+    const named = await createCategory("hr", { title: "Vodiči", seoName: "vodici" });
+    await createArticle("hr", { title: "Početak", slug: "pocetak", category: named.id });
+
+    expect(
+      await rejection(
+        createArticle("hr", { title: "Početak 2", slug: "pocetak", category: named.id }),
+        "slug",
+      ),
+    ).toBeDefined();
+  });
+
+  it("allows the same slug in another named Category", async () => {
+    const first = await createCategory("hr", { title: "Recepti", seoName: "recepti" });
+    const second = await createCategory("hr", { title: "Savjeti", seoName: "savjeti" });
+    await createArticle("hr", { title: "Uvod", slug: "uvod", category: first.id });
+
+    expect(
+      await rejection(createArticle("hr", { title: "Uvod", slug: "uvod", category: second.id }), "slug"),
+    ).toBeUndefined();
+  });
+
+  it("allows a slug that a Category uses as its SEO Name", async () => {
+    await createCategory("hr", { title: "Galerija", seoName: "galerija" });
+    const named = await createCategory("hr", { title: "Mediji", seoName: "mediji" });
+
+    expect(
+      await rejection(
+        createArticle("hr", { title: "Galerija", slug: "galerija", category: named.id }),
+        "slug",
+      ),
+    ).toBeUndefined();
+  });
+});
+
+describe("Drafts claim the same rules", () => {
+  // Payload skips field validation for Draft saves unless the collection opts
+  // in, so these write with `draft: true`, as the admin's "Save draft" does.
+  it("rejects a reserved slug saved as a Draft", async () => {
+    const save = payload.create({
+      collection: "articles",
+      locale: "hr",
+      draft: true,
+      data: {
+        title: "Nacrt",
+        slug: "admin",
+        category: await namelessCategory(),
+        publishedAt: new Date().toISOString(),
+      },
+      ...testWrite,
+    });
+
+    expect(await rejection(save, "slug")).toBeDefined();
+  });
+
+  it("rejects a Draft taking a slug another Article in its Category uses", async () => {
+    const named = await createCategory("hr", { title: "Nacrti", seoName: "nacrti-kat" });
+    await createArticle("hr", { title: "Zauzeto", slug: "zauzeto", category: named.id });
+
+    const save = payload.create({
+      collection: "articles",
+      locale: "hr",
+      draft: true,
+      data: {
+        title: "Zauzeto 2",
+        slug: "zauzeto",
+        category: named.id,
+        publishedAt: new Date().toISOString(),
+      },
+      ...testWrite,
+    });
+
+    expect(await rejection(save, "slug")).toBeDefined();
   });
 });

@@ -160,7 +160,6 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
-  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -216,6 +215,7 @@ export interface Article {
    * URL segment of this Article in this Locale.
    */
   slug: string;
+  coverImage?: (number | null) | Media;
   body?: {
     root: {
       type: string;
@@ -235,6 +235,7 @@ export interface Article {
   publishedAt: string;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -347,7 +348,6 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
-  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -401,11 +401,13 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface ArticlesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  coverImage?: T;
   body?: T;
   category?: T;
   publishedAt?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

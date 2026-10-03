@@ -2,7 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 import { loadTestEnv } from "./tests/helpers/test-env";
 
-const PORT = 3100;
+// Override with E2E_PORT when another local app already uses 3100.
+const PORT = Number(process.env.E2E_PORT ?? 3100);
 const env = loadTestEnv();
 
 // Tests run against a production build, not the dev server, on their own port
@@ -22,7 +23,14 @@ export default defineConfig({
   },
   projects: [
     {
+      // Must see the build's output before any test saves content.
+      name: "static-generation",
+      testMatch: /static-generation\.e2e\.spec\.ts/,
+    },
+    {
       name: "chromium",
+      testIgnore: /static-generation\.e2e\.spec\.ts/,
+      dependencies: ["static-generation"],
       // The installed Chrome avoids a separate browser download.
       use: { ...devices["Desktop Chrome"], channel: "chrome" },
     },

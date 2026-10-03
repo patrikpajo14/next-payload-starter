@@ -1,5 +1,6 @@
 import type { Payload } from "payload";
 import pg from "pg";
+import sharp from "sharp";
 
 import { testWrite } from "./local-api";
 import { paragraphs } from "./rich-text";
@@ -37,6 +38,7 @@ export async function seedBase(payload: Payload): Promise<void> {
   });
   await seedSiteChrome(payload);
   await seedStandaloneArticles(payload);
+  await seedCategoryArticles(payload);
 }
 
 /** Header and Footer in both Locales. Written outside Next.js, so revalidation is skipped. */
@@ -102,6 +104,7 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
       body: paragraphs("Vaši podaci su sigurni."),
       category: general.id,
       publishedAt,
+      _status: "published",
     },
     ...testWrite,
   });
@@ -113,6 +116,7 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
       title: "Privacy policy",
       slug: "privacy-policy",
       body: paragraphs("Your data is safe."),
+      _status: "published",
     },
     ...testWrite,
   });
@@ -125,6 +129,71 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
       slug: "samo-hrvatski",
       category: general.id,
       publishedAt,
+      _status: "published",
+    },
+    ...testWrite,
+  });
+}
+
+/** The Articles Category (`/hr/clanci`, `/en/articles`) with one published Article and its cover image. */
+async function seedCategoryArticles(payload: Payload): Promise<void> {
+  const cover = await sharp({
+    create: { width: 1200, height: 630, channels: 3, background: "#1d4ed8" },
+  })
+    .png()
+    .toBuffer();
+  const image = await payload.create({
+    collection: "media",
+    locale: "hr",
+    data: { alt: "Plava naslovnica" },
+    file: { data: cover, mimetype: "image/png", name: "naslovnica.png", size: cover.length },
+    ...testWrite,
+  });
+  await payload.update({
+    collection: "media",
+    id: image.id,
+    locale: "en",
+    data: { alt: "Blue cover" },
+    ...testWrite,
+  });
+
+  const articlesCategory = await payload.create({
+    collection: "categories",
+    locale: "hr",
+    data: { title: "Članci", seoName: "clanci" },
+    ...testWrite,
+  });
+  await payload.update({
+    collection: "categories",
+    id: articlesCategory.id,
+    locale: "en",
+    data: { title: "Articles", seoName: "articles" },
+    ...testWrite,
+  });
+
+  const article = await payload.create({
+    collection: "articles",
+    locale: "hr",
+    data: {
+      title: "Moj članak",
+      slug: "moj-clanak",
+      body: paragraphs("Tekst mog članka."),
+      category: articlesCategory.id,
+      coverImage: image.id,
+      publishedAt: "2026-02-01T00:00:00.000Z",
+      _status: "published",
+    },
+    ...testWrite,
+  });
+  await payload.update({
+    collection: "articles",
+    id: article.id,
+    locale: "en",
+    data: {
+      title: "My article",
+      slug: "my-article",
+      body: paragraphs("The text of my article."),
+      _status: "published",
     },
     ...testWrite,
   });
