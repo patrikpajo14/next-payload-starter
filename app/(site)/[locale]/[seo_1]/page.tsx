@@ -1,4 +1,3 @@
-import { RichText } from "@payloadcms/richtext-lexical/react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -6,8 +5,11 @@ import { getStandaloneArticle, listStandaloneSlugs } from "@/lib/articles";
 import { hasLocale } from "@/lib/i18n/locales";
 import { getLocale } from "@/lib/i18n/server";
 
-// `[seo_1]` is a Standalone Article slug for now. The Category Article List
-// (an SEO Name in this position) arrives with the Article List.
+import { ArticleContent } from "../_components/ArticleContent";
+
+// `[seo_1]` alone is a Standalone Article slug. Under it, `[seo_2]` serves the
+// Articles of a named Category; the Category's own Article List at
+// `/<locale>/<seo-name>` arrives with the Article List.
 
 export async function generateStaticParams({
   params,
@@ -38,20 +40,5 @@ export default async function StandaloneArticlePage({
   params,
 }: PageProps<"/[locale]/[seo_1]">) {
   const { locale, article } = await loadArticle(params);
-  const published = new Date(article.publishedAt);
-
-  return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16">
-      <article>
-        <h1 className="text-3xl font-semibold">{article.title}</h1>
-        <time dateTime={article.publishedAt} className="mt-2 block text-sm opacity-70">
-          {published.toLocaleDateString(locale, { dateStyle: "long" })}
-        </time>
-        {/* Empty fields are skipped: no body, no body container. */}
-        {article.body?.root.children.length ? (
-          <RichText data={article.body} className="prose mt-8" />
-        ) : null}
-      </article>
-    </main>
-  );
+  return <ArticleContent article={article} locale={locale} />;
 }

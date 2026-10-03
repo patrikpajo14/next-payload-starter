@@ -31,7 +31,8 @@ export const revalidateAllPagesAfterChange: GlobalAfterChangeHook = ({ context }
 };
 
 /**
- * Tag carried by every cached read of Articles and Categories, including the
+ * Tag carried by every cached read of Articles (with their Category and cover
+ * image) and Categories, including the
  * lookups that end in a 404, so a newly published slug stops 404ing at once.
  */
 export const CONTENT_TAG = "content";
@@ -40,12 +41,28 @@ function revalidateContent(context: Record<string, unknown>): void {
   if (!context.disableRevalidate) revalidateTag(CONTENT_TAG, { expire: 0 });
 }
 
-/** `afterChange` hook for Articles and Categories. Honours `disableRevalidate` like the globals. */
-export const revalidateContentAfterChange: CollectionAfterChangeHook = ({ context }) => {
-  revalidateContent(context);
+/**
+ * Saving a Draft of a never-published document changes nothing Visitors see.
+ * Documents without Drafts (Categories, Media) always count.
+ */
+function affectsVisitors(doc: { _status?: unknown }, previousDoc?: { _status?: unknown }): boolean {
+  if (!("_status" in doc)) return true;
+  return doc._status === "published" || previousDoc?._status === "published";
+}
+
+/**
+ * `afterChange` hook for Articles, Categories, and Media (cover images are read
+ * with their Article). Honours `disableRevalidate` like the globals.
+ */
+export const revalidateContentAfterChange: CollectionAfterChangeHook = ({
+  context,
+  doc,
+  previousDoc,
+}) => {
+  if (affectsVisitors(doc, previousDoc)) revalidateContent(context);
 };
 
-/** `afterDelete` hook for Articles and Categories. */
+/** `afterDelete` hook for Articles, Categories, and Media. */
 export const revalidateContentAfterDelete: CollectionAfterDeleteHook = ({ context }) => {
   revalidateContent(context);
 };
