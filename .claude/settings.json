@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "deny": [
+      "Artifact",
+      "ArtifactData",
+      "ArtifactComments",
+      "DesignSync",
+      "Monitor",
+      "SendFeedback",
+      "Workflow",
+      "ScheduleWakeup",
+      "EndConversation",
+      "EnterWorktree",
+      "ExitWorktree",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "ReportFindings",
+      "NotebookEdit",
+      "PushNotification"
+    ]
+  },
+  "enabledPlugins": {
+    "expo@claude-plugins-official": false,
+    "figma@claude-plugins-official": false
+  }
+}
