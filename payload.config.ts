@@ -7,6 +7,7 @@ import sharp from "sharp";
 
 import { Articles } from "./collections/Articles";
 import { Categories } from "./collections/Categories";
+import { ContactSubmissions } from "./collections/ContactSubmissions";
 import { Media } from "./collections/Media";
 import { Users } from "./collections/Users";
 import { Footer } from "./globals/Footer";
@@ -19,7 +20,7 @@ export default buildConfig({
   admin: {
     user: Users.slug,
   },
-  collections: [Users, Media, Categories, Articles],
+  collections: [Users, Media, Categories, Articles, ContactSubmissions],
   globals: [Header, Footer, Homepage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET ?? "",
