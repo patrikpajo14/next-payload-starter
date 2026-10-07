@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import type { Locale } from "../../lib/i18n/locales";
+import { editorHeaders } from "../helpers/editor-api";
 import { homepageSections, saveSections } from "../helpers/homepage-api";
 import type { SectionData } from "../helpers/homepage-api";
 
@@ -130,6 +131,33 @@ test.describe("an Editor filling FAQ and Banner in one Locale", () => {
     await saveSections(request, "en", seededEn);
   });
 
+  test("the Banner CTA follows the Article an Editor picks, in the Visitor's Locale", async ({
+    page,
+    request,
+  }) => {
+    const find = async (slug: string) => {
+      const response = await request.get(
+        `/api/articles?locale=en&depth=0&where[slug][equals]=${slug}`,
+        { headers: await editorHeaders(request) },
+      );
+      return (await response.json()).docs[0].id as number;
+    };
+    const myArticle = await find("my-article");
+    await saveSections(request, "en", [
+      { blockType: "banner", text: "Read on", cta: { label: "My article", article: myArticle } },
+      { blockType: "banner", text: "Unlinked", cta: { label: "Nowhere" } },
+    ]);
+
+    await page.goto("/en");
+
+    await expect(
+      main(page).locator("section", { hasText: "Read on" }).getByRole("link"),
+    ).toHaveAttribute("href", "/en/articles/my-article");
+    await expect(
+      main(page).locator("section", { hasText: "Unlinked" }).getByRole("link"),
+    ).toHaveCount(0);
+  });
+
   test("incomplete items, half a CTA, and emptied Sections are skipped", async ({
     page,
     request,
@@ -167,6 +195,7 @@ test.describe("an Editor filling FAQ and Banner in one Locale", () => {
 
     const banner = main(page).locator("section", { hasText: "Half a CTA" });
     await expect(banner.getByRole("link")).toHaveCount(0);
+    // The FAQ and the Banner with text are the only Sections left.
     await expect(main(page).locator("section")).toHaveCount(2);
 
     // The other Locale keeps its own Sections.

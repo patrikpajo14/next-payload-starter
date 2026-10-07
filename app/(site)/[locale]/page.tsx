@@ -27,7 +27,7 @@ export default async function HomePage() {
           case "faq":
             return <FaqSection key={section.id} faq={section} />;
           case "banner":
-            return <BannerSection key={section.id} banner={section} />;
+            return <BannerSection key={section.id} banner={section} locale={locale} />;
         }
       })}
     </main>

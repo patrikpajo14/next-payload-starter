@@ -90,8 +90,10 @@ const FaqSection: Block = {
 
 /**
  * A full-width image with text and a call-to-action button. Every field is
- * optional; empty ones are skipped. The CTA is shown only when both its label
- * and URL are filled; Editors point it at the Contact Page in this Locale.
+ * optional; empty ones are skipped. The CTA links to an Article, normally the
+ * Contact Page, so its address follows the Article's slug in each Locale. It
+ * is shown only when both the label and the Article are set and the Article is
+ * Published with a title in the Locale.
  */
 const BannerSection: Block = {
   slug: "banner",
@@ -103,12 +105,15 @@ const BannerSection: Block = {
     {
       name: "cta",
       type: "group",
-      admin: {
-        description: "Shown only when both the label and the URL are filled.",
-      },
+      admin: { description: "Shown only when both the label and the Article are set." },
       fields: [
         { name: "label", type: "text" },
-        { name: "url", type: "text" },
+        {
+          name: "article",
+          type: "relationship",
+          relationTo: "articles",
+          admin: { description: "The Contact Page, or any other Article to lead Visitors to." },
+        },
       ],
     },
   ],

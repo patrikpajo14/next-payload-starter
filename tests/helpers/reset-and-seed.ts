@@ -38,9 +38,9 @@ export async function seedBase(payload: Payload): Promise<void> {
     overrideAccess: true,
   });
   await seedSiteChrome(payload);
-  await seedStandaloneArticles(payload);
+  const contactId = await seedStandaloneArticles(payload);
   const cover = await seedCategoryArticles(payload);
-  await seedHomepage(payload, cover);
+  await seedHomepage(payload, cover, contactId);
 }
 
 /** Header and Footer in both Locales. Written outside Next.js, so revalidation is skipped. */
@@ -79,8 +79,11 @@ async function seedSiteChrome(payload: Payload): Promise<void> {
   });
 }
 
-/** A nameless Category with the privacy policy in both Locales and one Croatian-only Article. */
-async function seedStandaloneArticles(payload: Payload): Promise<void> {
+/**
+ * A nameless Category with the privacy policy and the Contact Page in both
+ * Locales and one Croatian-only Article. Returns the Contact Page's id.
+ */
+async function seedStandaloneArticles(payload: Payload): Promise<number> {
   const publishedAt = "2026-01-15T00:00:00.000Z";
 
   const general = await payload.create({
@@ -161,6 +164,7 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
     },
     ...testWrite,
   });
+  return contact.id;
 }
 
 /**
@@ -268,11 +272,11 @@ async function seedArticleList(payload: Payload, categoryId: number): Promise<vo
 /**
  * One of each Section per Locale, in this order: a Hero with the blue cover
  * image, a Products Slider of three products, a Solutions Section of two
- * solutions, a FAQ of two questions, and a Banner with a link to the Contact
+ * solutions, a FAQ of two questions, and a Banner whose CTA leads to the Contact
  * Page. The first product and solution have a green image, and the second a
  * link. The Banner has the green image too.
  */
-async function seedHomepage(payload: Payload, coverId: number): Promise<void> {
+async function seedHomepage(payload: Payload, coverId: number, contactId: number): Promise<void> {
   const greenImage = await seedImage(payload, {
     name: "zelena.png",
     width: 800,
@@ -329,7 +333,7 @@ async function seedHomepage(payload: Payload, coverId: number): Promise<void> {
           blockType: "banner",
           image: greenImage.id,
           text: "Imate pitanje? Javite nam se.",
-          cta: { label: "Kontaktirajte nas", url: "/hr/kontakt" },
+          cta: { label: "Kontaktirajte nas", article: contactId },
         },
       ],
     },
@@ -383,7 +387,7 @@ async function seedHomepage(payload: Payload, coverId: number): Promise<void> {
           blockType: "banner",
           image: greenImage.id,
           text: "Have a question? Get in touch.",
-          cta: { label: "Contact us", url: "/en/contact" },
+          cta: { label: "Contact us", article: contactId },
         },
       ],
     },

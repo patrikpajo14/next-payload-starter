@@ -1,7 +1,7 @@
 import type { PayloadRequest, RelationshipFieldValidation, Validate } from "payload";
 import { relationship } from "payload/shared";
 
-import type { Category } from "@/payload-types";
+import type { Article, Category } from "@/payload-types";
 
 import { defaultLocale, hasLocale, locales } from "./i18n/locales";
 import type { Locale } from "./i18n/locales";
@@ -47,6 +47,22 @@ export function articleListPath(locale: Locale, seoName: string, page: number): 
 /** The address of an Article in a named Category. */
 export function categoryArticlePath(locale: Locale, seoName: string, slug: string): string {
   return `/${locale}/${seoName}/${slug}`;
+}
+
+/**
+ * The address of an Article read with its Category populated (`depth: 2` from
+ * a Section), or null when it can't be linked: the relationship is not
+ * populated (an unpublished Article is hidden from Visitors), it has no title
+ * or slug in this Locale, or its Category is a bare id.
+ */
+export function articlePath(locale: Locale, article: Article | number | null | undefined) {
+  if (typeof article !== "object" || article === null) return null;
+  if (!article.title || !article.slug) return null;
+  if (hostsStandaloneArticles(article.category)) return `/${locale}/${article.slug}`;
+  if (typeof article.category === "object" && article.category.seoName) {
+    return categoryArticlePath(locale, article.category.seoName, article.slug);
+  }
+  return null;
 }
 
 /** The id behind a relationship value, populated or not. */

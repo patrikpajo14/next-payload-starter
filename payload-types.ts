@@ -582,11 +582,14 @@ export interface BannerSection {
   image?: (number | null) | Media;
   text?: string | null;
   /**
-   * Shown only when both the label and the URL are filled.
+   * Shown only when both the label and the Article are set.
    */
   cta?: {
     label?: string | null;
-    url?: string | null;
+    /**
+     * The Contact Page, or any other Article to lead Visitors to.
+     */
+    article?: (number | null) | Article;
   };
   id?: string | null;
   blockName?: string | null;
@@ -720,7 +723,7 @@ export interface BannerSectionSelect<T extends boolean = true> {
     | T
     | {
         label?: T;
-        url?: T;
+        article?: T;
       };
   id?: T;
   blockName?: T;
