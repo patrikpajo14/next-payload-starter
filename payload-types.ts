@@ -101,6 +101,7 @@ export interface Config {
     media: Media;
     categories: Category;
     articles: Article;
+    'contact-submissions': ContactSubmission;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -112,6 +113,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    'contact-submissions': ContactSubmissionsSelect<false> | ContactSubmissionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -268,10 +270,38 @@ export interface Article {
     [k: string]: unknown;
   } | null;
   category: number | Category;
+  /**
+   * Show the Contact Form below the body. The Contact Page has this on.
+   */
+  showContactForm?: boolean | null;
+  /**
+   * The Article the Contact Form's consent checkbox links to.
+   */
+  privacyPolicy?: (number | null) | Article;
   publishedAt: string;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-submissions".
+ */
+export interface ContactSubmission {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  phone: string;
+  address: string;
+  postalCode: string;
+  message: string;
+  /**
+   * The Locale the Visitor was reading when they sent the message.
+   */
+  visitorLocale: 'hr' | 'en';
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -312,6 +342,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'articles';
         value: number | Article;
+      } | null)
+    | ({
+        relationTo: 'contact-submissions';
+        value: number | ContactSubmission;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -441,10 +475,28 @@ export interface ArticlesSelect<T extends boolean = true> {
   coverImage?: T;
   body?: T;
   category?: T;
+  showContactForm?: T;
+  privacyPolicy?: T;
   publishedAt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-submissions_select".
+ */
+export interface ContactSubmissionsSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  email?: T;
+  phone?: T;
+  address?: T;
+  postalCode?: T;
+  message?: T;
+  visitorLocale?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

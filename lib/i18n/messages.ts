@@ -22,6 +22,33 @@ export interface Messages {
   products: string;
   previousProduct: string;
   nextProduct: string;
+  contact: ContactMessages;
+}
+
+/** Contact Form labels, hints, and validation errors. Plain strings, so they pass to Client Components. */
+export interface ContactMessages {
+  firstName: string;
+  lastName: string;
+  email: string;
+  emailOptional: string;
+  phone: string;
+  address: string;
+  postalCode: string;
+  message: string;
+  /** Text before the privacy policy link in the consent checkbox label. */
+  consentBefore: string;
+  /** Consent label when the Article names no privacy policy to link. */
+  consentPlain: string;
+  submit: string;
+  sending: string;
+  success: string;
+  failure: string;
+  errors: {
+    required: string;
+    email: string;
+    phone: string;
+    postalCode: string;
+  };
 }
 
 export const messages: Record<Locale, Messages> = {
@@ -38,6 +65,28 @@ export const messages: Record<Locale, Messages> = {
     products: "Proizvodi",
     previousProduct: "Prethodni proizvod",
     nextProduct: "Sljedeći proizvod",
+    contact: {
+      firstName: "Ime",
+      lastName: "Prezime",
+      email: "E-pošta",
+      emailOptional: "(neobavezno)",
+      phone: "Telefon",
+      address: "Adresa",
+      postalCode: "Poštanski broj",
+      message: "Poruka",
+      consentBefore: "Pročitao/la sam i prihvaćam",
+      consentPlain: "Prihvaćam obradu osobnih podataka",
+      submit: "Pošalji",
+      sending: "Slanje…",
+      success: "Hvala! Vaša je poruka poslana.",
+      failure: "Poruka nije poslana. Pokušajte ponovno.",
+      errors: {
+        required: "Ovo polje je obavezno.",
+        email: "Unesite ispravnu adresu e-pošte.",
+        phone: "Koristite samo znamenke, razmake, + i -.",
+        postalCode: "Unesite peteroznamenkasti poštanski broj.",
+      },
+    },
   },
   en: {
     siteTitle: "Starter Site",
@@ -52,5 +101,27 @@ export const messages: Record<Locale, Messages> = {
     products: "Products",
     previousProduct: "Previous product",
     nextProduct: "Next product",
+    contact: {
+      firstName: "First name",
+      lastName: "Last name",
+      email: "Email",
+      emailOptional: "(optional)",
+      phone: "Phone",
+      address: "Address",
+      postalCode: "Postal code",
+      message: "Message",
+      consentBefore: "I have read and accept the",
+      consentPlain: "I agree to the processing of my personal data",
+      submit: "Send",
+      sending: "Sending…",
+      success: "Thank you! Your message has been sent.",
+      failure: "Your message was not sent. Please try again.",
+      errors: {
+        required: "This field is required.",
+        email: "Enter a valid email address.",
+        phone: "Use only digits, spaces, + and -.",
+        postalCode: "Enter a five-digit postal code.",
+      },
+    },
   },
 };
