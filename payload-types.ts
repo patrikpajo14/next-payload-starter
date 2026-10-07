@@ -7,6 +7,25 @@
  */
 
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionItem".
+ */
+export type SectionItem =
+  | {
+      title?: string | null;
+      image?: (number | null) | Media;
+      text?: string | null;
+      /**
+       * Shown only when both the label and the URL are filled.
+       */
+      link?: {
+        label?: string | null;
+        url?: string | null;
+      };
+      id?: string | null;
+    }[]
+  | null;
+/**
  * Supported timezones in IANA format.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -162,7 +181,6 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
-  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -355,7 +373,6 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
-  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -497,7 +514,7 @@ export interface Footer {
  */
 export interface Homepage {
   id: number;
-  sections?: HeroSection[] | null;
+  sections?: (HeroSection | ProductsSliderSection | SolutionsSection)[] | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -512,6 +529,28 @@ export interface HeroSection {
   id?: string | null;
   blockName?: string | null;
   blockType: 'hero';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductsSliderSection".
+ */
+export interface ProductsSliderSection {
+  heading?: string | null;
+  items?: SectionItem;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'productsSlider';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SolutionsSection".
+ */
+export interface SolutionsSection {
+  heading?: string | null;
+  items?: SectionItem;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'solutions';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -555,6 +594,8 @@ export interface HomepageSelect<T extends boolean = true> {
     | T
     | {
         hero?: T | HeroSectionSelect<T>;
+        productsSlider?: T | ProductsSliderSectionSelect<T>;
+        solutions?: T | SolutionsSectionSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -568,6 +609,42 @@ export interface HeroSectionSelect<T extends boolean = true> {
   image?: T;
   heading?: T;
   text?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductsSliderSection_select".
+ */
+export interface ProductsSliderSectionSelect<T extends boolean = true> {
+  heading?: T;
+  items?: T | SectionItemSelect<T>;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionItem_select".
+ */
+export interface SectionItemSelect<T extends boolean = true> {
+  title?: T;
+  image?: T;
+  text?: T;
+  link?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+      };
+  id?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SolutionsSection_select".
+ */
+export interface SolutionsSectionSelect<T extends boolean = true> {
+  heading?: T;
+  items?: T | SectionItemSelect<T>;
   id?: T;
   blockName?: T;
 }

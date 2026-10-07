@@ -2,7 +2,8 @@ import type { Locale } from "./locales";
 
 /**
  * Interface strings that belong to the application, not to Editors: the site
- * title, the not-found page, navigation labels, and Article List pagination.
+ * title, the not-found page, navigation labels, Article List pagination, and
+ * the Products Slider's controls.
  * Everything else on the site comes from Payload.
  */
 export interface Messages {
@@ -17,6 +18,10 @@ export interface Messages {
   pagination: string;
   /** Page title suffix for Article List page `n`. */
   pageNumber: (n: number) => string;
+  /** Label of a Products Slider without a heading. */
+  products: string;
+  previousProduct: string;
+  nextProduct: string;
 }
 
 export const messages: Record<Locale, Messages> = {
@@ -30,6 +35,9 @@ export const messages: Record<Locale, Messages> = {
     languageSwitcher: "Odabir jezika",
     pagination: "Stranice",
     pageNumber: (n) => `stranica ${n}`,
+    products: "Proizvodi",
+    previousProduct: "Prethodni proizvod",
+    nextProduct: "Sljedeći proizvod",
   },
   en: {
     siteTitle: "Starter Site",
@@ -41,5 +49,8 @@ export const messages: Record<Locale, Messages> = {
     languageSwitcher: "Choose language",
     pagination: "Pages",
     pageNumber: (n) => `page ${n}`,
+    products: "Products",
+    previousProduct: "Previous product",
+    nextProduct: "Next product",
   },
 };

@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
-import type { APIRequestContext, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import type { Locale } from "../../lib/i18n/locales";
-import { editorHeaders } from "../helpers/editor-api";
+import { homepageSections, saveSections } from "../helpers/homepage-api";
+import type { SectionData } from "../helpers/homepage-api";
 
-// Seeded by tests/helpers/reset-and-seed.ts: one Hero Section per Locale with
-// the blue cover image, a heading, and text.
+// Seeded by tests/helpers/reset-and-seed.ts: per Locale, a Hero Section with
+// the blue cover image, a heading, and text, followed by a Products Slider and
+// a Solutions Section.
 
 const heroes: Array<{ locale: Locale; heading: string; text: string; alt: string }> = [
   {
@@ -24,9 +26,9 @@ const heroes: Array<{ locale: Locale; heading: string; text: string; alt: string
 
 const main = (page: Page) => page.getByRole("main");
 
-/** The Section headings on the Page, in order. */
+/** The Section headings on the Page, in order. Items inside Sections have lower-level headings. */
 const sectionHeadings = (page: Page) =>
-  main(page).locator("section").getByRole("heading").allTextContents();
+  main(page).locator("section").getByRole("heading", { level: 2 }).allTextContents();
 
 for (const hero of heroes) {
   test(`the Hero Section renders its image and text on /${hero.locale}`, async ({ page }) => {
@@ -37,29 +39,6 @@ for (const hero of heroes) {
     await expect(main(page).getByText(hero.text)).toBeVisible();
     await expect(main(page).getByRole("img", { name: hero.alt })).toBeVisible();
   });
-}
-
-/** A Section as the REST API takes it. */
-type SectionData = Record<string, unknown>;
-
-async function homepageSections(
-  request: APIRequestContext,
-  locale: Locale,
-): Promise<SectionData[]> {
-  const response = await request.get(`/api/globals/homepage?locale=${locale}&depth=0`, {
-    headers: await editorHeaders(request),
-  });
-  expect(response.ok()).toBe(true);
-  return (await response.json()).sections ?? [];
-}
-
-/** Saves the Homepage the way the admin does: an authenticated REST update. */
-async function saveSections(request: APIRequestContext, locale: Locale, sections: SectionData[]) {
-  const response = await request.post(`/api/globals/homepage?locale=${locale}`, {
-    headers: await editorHeaders(request),
-    data: { sections },
-  });
-  expect(response.ok()).toBe(true);
 }
 
 const heroSection = (heading: string, text?: string): SectionData => ({
@@ -84,7 +63,11 @@ test.describe("an Editor managing Hero Sections", () => {
     request,
   }) => {
     await page.goto("/en");
-    expect(await sectionHeadings(page)).toEqual(["Welcome to Starter Site"]);
+    expect(await sectionHeadings(page)).toEqual([
+      "Welcome to Starter Site",
+      "Our products",
+      "Our solutions",
+    ]);
 
     await saveSections(request, "en", [
       ...seeded,
@@ -94,6 +77,8 @@ test.describe("an Editor managing Hero Sections", () => {
     await page.goto("/en");
     expect(await sectionHeadings(page)).toEqual([
       "Welcome to Starter Site",
+      "Our products",
+      "Our solutions",
       "Second hero",
       "Third hero",
     ]);
@@ -107,6 +92,8 @@ test.describe("an Editor managing Hero Sections", () => {
     expect(await sectionHeadings(page)).toEqual([
       "Third hero",
       "Welcome to Starter Site",
+      "Our products",
+      "Our solutions",
       "Second hero",
     ]);
 
@@ -116,7 +103,11 @@ test.describe("an Editor managing Hero Sections", () => {
 
     // The other Locale keeps its own Sections.
     await page.goto("/hr");
-    expect(await sectionHeadings(page)).toEqual(["Dobrodošli na Starter Site"]);
+    expect(await sectionHeadings(page)).toEqual([
+      "Dobrodošli na Starter Site",
+      "Naši proizvodi",
+      "Naša rješenja",
+    ]);
   });
 
   test("saving the Homepage refreshes every cached Page", async ({ request }) => {
