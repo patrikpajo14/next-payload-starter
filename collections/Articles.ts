@@ -47,6 +47,25 @@ export const Articles: CollectionConfig = {
       admin: { position: "sidebar" },
     },
     {
+      name: "showContactForm",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        position: "sidebar",
+        description: "Show the Contact Form below the body. The Contact Page has this on.",
+      },
+    },
+    {
+      name: "privacyPolicy",
+      type: "relationship",
+      relationTo: "articles",
+      admin: {
+        position: "sidebar",
+        condition: (data) => Boolean(data?.showContactForm),
+        description: "The Article the Contact Form's consent checkbox links to.",
+      },
+    },
+    {
       name: "publishedAt",
       type: "date",
       required: true,

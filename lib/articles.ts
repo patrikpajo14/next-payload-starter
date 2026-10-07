@@ -50,7 +50,8 @@ export const getStandaloneArticle = unstable_cache(
       collection: "articles",
       locale,
       where: { slug: { equals: slug } },
-      depth: 1,
+      // Depth 2 populates the privacy policy Article with its Category, to link it.
+      depth: 2,
     });
     return docs.find(isPublicStandalone) ?? null;
   },
@@ -89,7 +90,7 @@ export const getCategoryArticle = unstable_cache(
       collection: "articles",
       locale,
       where: { and: [{ slug: { equals: slug } }, { category: { equals: category.id } }] },
-      depth: 1,
+      depth: 2,
       limit: 1,
     });
     const article = docs[0];

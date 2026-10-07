@@ -134,6 +134,8 @@ async function seedStandaloneArticles(payload: Payload): Promise<number> {
       slug: "kontakt",
       body: paragraphs("Javite nam se."),
       category: general.id,
+      showContactForm: true,
+      privacyPolicy: privacy.id,
       publishedAt,
       _status: "published",
     },
