@@ -2,6 +2,7 @@ import type { Payload } from "payload";
 import pg from "pg";
 import sharp from "sharp";
 
+import type { Locale } from "../../lib/i18n/locales";
 import { testWrite } from "./local-api";
 import { paragraphs } from "./rich-text";
 import { assertSafeTestDatabase } from "./safe-database";
@@ -141,24 +142,12 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
  * Article and its cover image. Returns the cover image's id.
  */
 async function seedCategoryArticles(payload: Payload): Promise<number> {
-  const cover = await sharp({
-    create: { width: 1200, height: 630, channels: 3, background: "#1d4ed8" },
-  })
-    .png()
-    .toBuffer();
-  const image = await payload.create({
-    collection: "media",
-    locale: "hr",
-    data: { alt: "Plava naslovnica" },
-    file: { data: cover, mimetype: "image/png", name: "naslovnica.png", size: cover.length },
-    ...testWrite,
-  });
-  await payload.update({
-    collection: "media",
-    id: image.id,
-    locale: "en",
-    data: { alt: "Blue cover" },
-    ...testWrite,
+  const image = await seedImage(payload, {
+    name: "naslovnica.png",
+    width: 1200,
+    height: 630,
+    background: "#1d4ed8",
+    alt: { hr: "Plava naslovnica", en: "Blue cover" },
   });
 
   const articlesCategory = await payload.create({
@@ -250,8 +239,21 @@ async function seedArticleList(payload: Payload, categoryId: number): Promise<vo
   });
 }
 
-/** One Hero Section per Locale, with the blue cover image, a heading, and text. */
-async function seedHomepage(payload: Payload, imageId: number): Promise<void> {
+/**
+ * One of each Section per Locale, in this order: a Hero with the blue cover
+ * image, a Products Slider of three products, and a Solutions Section of two
+ * solutions. The first product and solution have a green image, and the second
+ * a link.
+ */
+async function seedHomepage(payload: Payload, coverId: number): Promise<void> {
+  const greenImage = await seedImage(payload, {
+    name: "zelena.png",
+    width: 800,
+    height: 600,
+    background: "#15803d",
+    alt: { hr: "Zelena slika", en: "Green image" },
+  });
+
   await payload.updateGlobal({
     slug: "homepage",
     locale: "hr",
@@ -259,9 +261,34 @@ async function seedHomepage(payload: Payload, imageId: number): Promise<void> {
       sections: [
         {
           blockType: "hero",
-          image: imageId,
+          image: coverId,
           heading: "Dobrodošli na Starter Site",
           text: "Članci i novosti našeg tima.",
+        },
+        {
+          blockType: "productsSlider",
+          heading: "Naši proizvodi",
+          items: [
+            { title: "Proizvod Jedan", text: "Prvi proizvod u ponudi.", image: greenImage.id },
+            {
+              title: "Proizvod Dva",
+              text: "Drugi proizvod u ponudi.",
+              link: { label: "Saznajte više", url: "/hr/clanci" },
+            },
+            { title: "Proizvod Tri", text: "Treći proizvod u ponudi." },
+          ],
+        },
+        {
+          blockType: "solutions",
+          heading: "Naša rješenja",
+          items: [
+            { title: "Rješenje A", text: "Za mala poduzeća.", image: greenImage.id },
+            {
+              title: "Rješenje B",
+              text: "Za velike timove.",
+              link: { label: "Pročitajte članke", url: "/hr/clanci" },
+            },
+          ],
         },
       ],
     },
@@ -274,12 +301,70 @@ async function seedHomepage(payload: Payload, imageId: number): Promise<void> {
       sections: [
         {
           blockType: "hero",
-          image: imageId,
+          image: coverId,
           heading: "Welcome to Starter Site",
           text: "Articles and news from our team.",
+        },
+        {
+          blockType: "productsSlider",
+          heading: "Our products",
+          items: [
+            { title: "Product One", text: "The first product on offer.", image: greenImage.id },
+            {
+              title: "Product Two",
+              text: "The second product on offer.",
+              link: { label: "Learn more", url: "/en/articles" },
+            },
+            { title: "Product Three", text: "The third product on offer." },
+          ],
+        },
+        {
+          blockType: "solutions",
+          heading: "Our solutions",
+          items: [
+            { title: "Solution A", text: "For small businesses.", image: greenImage.id },
+            {
+              title: "Solution B",
+              text: "For large teams.",
+              link: { label: "Read our articles", url: "/en/articles" },
+            },
+          ],
         },
       ],
     },
     ...testWrite,
   });
+}
+
+/** A single-colour PNG with its alt text in both Locales. */
+async function seedImage(
+  payload: Payload,
+  image: {
+    name: string;
+    width: number;
+    height: number;
+    background: string;
+    alt: Record<Locale, string>;
+  },
+) {
+  const data = await sharp({
+    create: { width: image.width, height: image.height, channels: 3, background: image.background },
+  })
+    .png()
+    .toBuffer();
+  const media = await payload.create({
+    collection: "media",
+    locale: "hr",
+    data: { alt: image.alt.hr },
+    file: { data, mimetype: "image/png", name: image.name, size: data.length },
+    ...testWrite,
+  });
+  await payload.update({
+    collection: "media",
+    id: media.id,
+    locale: "en",
+    data: { alt: image.alt.en },
+    ...testWrite,
+  });
+  return media;
 }
