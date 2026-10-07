@@ -10,6 +10,7 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "payload": "payload",
+    "seed": "payload run scripts/seed.ts",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "test": "pnpm test:int && pnpm test:e2e",
