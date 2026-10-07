@@ -32,8 +32,8 @@ export const revalidateAllPagesAfterChange: GlobalAfterChangeHook = ({ context }
 
 /**
  * Tag carried by every cached read of Articles (with their Category and cover
- * image) and Categories, including the
- * lookups that end in a 404, so a newly published slug stops 404ing at once.
+ * image), Categories, and the Homepage (whose Sections carry images), including
+ * the lookups that end in a 404, so a newly published slug stops 404ing at once.
  */
 export const CONTENT_TAG = "content";
 

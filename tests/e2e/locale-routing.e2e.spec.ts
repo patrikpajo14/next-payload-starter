@@ -45,7 +45,7 @@ test.describe("site shell", () => {
 
     expect(response?.status()).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("lang", "hr");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dobrodošli");
+    await expect(page.getByRole("heading", { name: "Dobrodošli na Starter Site" })).toBeVisible();
   });
 
   test("/en renders in English", async ({ page }) => {
@@ -53,7 +53,7 @@ test.describe("site shell", () => {
 
     expect(response?.status()).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome");
+    await expect(page.getByRole("heading", { name: "Welcome to Starter Site" })).toBeVisible();
   });
 });
 

@@ -38,7 +38,8 @@ export async function seedBase(payload: Payload): Promise<void> {
   });
   await seedSiteChrome(payload);
   await seedStandaloneArticles(payload);
-  await seedCategoryArticles(payload);
+  const cover = await seedCategoryArticles(payload);
+  await seedHomepage(payload, cover);
 }
 
 /** Header and Footer in both Locales. Written outside Next.js, so revalidation is skipped. */
@@ -135,8 +136,11 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
   });
 }
 
-/** The Articles Category (`/hr/clanci`, `/en/articles`) with one published Article and its cover image. */
-async function seedCategoryArticles(payload: Payload): Promise<void> {
+/**
+ * The Articles Category (`/hr/clanci`, `/en/articles`) with one published
+ * Article and its cover image. Returns the cover image's id.
+ */
+async function seedCategoryArticles(payload: Payload): Promise<number> {
   const cover = await sharp({
     create: { width: 1200, height: 630, channels: 3, background: "#1d4ed8" },
   })
@@ -199,6 +203,7 @@ async function seedCategoryArticles(payload: Payload): Promise<void> {
   });
 
   await seedArticleList(payload, articlesCategory.id);
+  return image.id;
 }
 
 /**
@@ -240,6 +245,40 @@ async function seedArticleList(payload: Payload, categoryId: number): Promise<vo
       category: categoryId,
       publishedAt: "2026-01-20T00:00:00.000Z",
       _status: "published",
+    },
+    ...testWrite,
+  });
+}
+
+/** One Hero Section per Locale, with the blue cover image, a heading, and text. */
+async function seedHomepage(payload: Payload, imageId: number): Promise<void> {
+  await payload.updateGlobal({
+    slug: "homepage",
+    locale: "hr",
+    data: {
+      sections: [
+        {
+          blockType: "hero",
+          image: imageId,
+          heading: "Dobrodošli na Starter Site",
+          text: "Članci i novosti našeg tima.",
+        },
+      ],
+    },
+    ...testWrite,
+  });
+  await payload.updateGlobal({
+    slug: "homepage",
+    locale: "en",
+    data: {
+      sections: [
+        {
+          blockType: "hero",
+          image: imageId,
+          heading: "Welcome to Starter Site",
+          text: "Articles and news from our team.",
+        },
+      ],
     },
     ...testWrite,
   });
