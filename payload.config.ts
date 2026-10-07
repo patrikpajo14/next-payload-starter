@@ -11,6 +11,7 @@ import { Media } from "./collections/Media";
 import { Users } from "./collections/Users";
 import { Footer } from "./globals/Footer";
 import { Header } from "./globals/Header";
+import { Homepage } from "./globals/Homepage";
 import { defaultLocale, localeLabels, locales } from "./lib/i18n/locales";
 import { mediaStorage } from "./lib/media-storage";
 
@@ -19,7 +20,7 @@ export default buildConfig({
     user: Users.slug,
   },
   collections: [Users, Media, Categories, Articles],
-  globals: [Header, Footer],
+  globals: [Header, Footer, Homepage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET ?? "",
   db: postgresAdapter({

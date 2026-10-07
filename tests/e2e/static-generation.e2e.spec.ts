@@ -6,6 +6,8 @@ import { expect, test } from "@playwright/test";
 // was generated at build time.
 
 for (const path of [
+  "/hr",
+  "/en",
   "/hr/politika-privatnosti",
   "/hr/clanci/moj-clanak",
   "/hr/clanci",
