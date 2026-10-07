@@ -14,8 +14,9 @@ export type Section = NonNullable<Homepage["sections"]>[number];
  * The Homepage's Sections in one Locale, in the order Editors set.
  *
  * - `ALL_PAGES_TAG`: saving the Homepage refreshes it (and every other Page).
- * - `CONTENT_TAG`: images are read with their Sections (`depth: 1`), so a new
- *   file or alt text refreshes the Homepage like it refreshes Articles.
+ * - `CONTENT_TAG`: images and Banner CTA Articles are read with their Sections
+ *   (`depth: 2`: the Article's Category gives its address), so a new file, alt
+ *   text, or slug refreshes the Homepage like it refreshes Articles.
  * - `fallbackLocale: false`: a Locale without Sections shows none rather than
  *   the other Locale's.
  */
@@ -26,7 +27,7 @@ export const getHomepageSections = unstable_cache(
       slug: "homepage",
       locale,
       fallbackLocale: false,
-      depth: 1,
+      depth: 2,
       overrideAccess: false,
     });
     return homepage.sections ?? [];

@@ -38,9 +38,9 @@ export async function seedBase(payload: Payload): Promise<void> {
     overrideAccess: true,
   });
   await seedSiteChrome(payload);
-  await seedStandaloneArticles(payload);
+  const contactId = await seedStandaloneArticles(payload);
   const cover = await seedCategoryArticles(payload);
-  await seedHomepage(payload, cover);
+  await seedHomepage(payload, cover, contactId);
 }
 
 /** Header and Footer in both Locales. Written outside Next.js, so revalidation is skipped. */
@@ -79,8 +79,11 @@ async function seedSiteChrome(payload: Payload): Promise<void> {
   });
 }
 
-/** A nameless Category with the privacy policy in both Locales and one Croatian-only Article. */
-async function seedStandaloneArticles(payload: Payload): Promise<void> {
+/**
+ * A nameless Category with the privacy policy and the Contact Page in both
+ * Locales and one Croatian-only Article. Returns the Contact Page's id.
+ */
+async function seedStandaloneArticles(payload: Payload): Promise<number> {
   const publishedAt = "2026-01-15T00:00:00.000Z";
 
   const general = await payload.create({
@@ -123,6 +126,32 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
     ...testWrite,
   });
 
+  const contact = await payload.create({
+    collection: "articles",
+    locale: "hr",
+    data: {
+      title: "Kontakt",
+      slug: "kontakt",
+      body: paragraphs("Javite nam se."),
+      category: general.id,
+      publishedAt,
+      _status: "published",
+    },
+    ...testWrite,
+  });
+  await payload.update({
+    collection: "articles",
+    id: contact.id,
+    locale: "en",
+    data: {
+      title: "Contact",
+      slug: "contact",
+      body: paragraphs("Get in touch."),
+      _status: "published",
+    },
+    ...testWrite,
+  });
+
   await payload.create({
     collection: "articles",
     locale: "hr",
@@ -135,6 +164,7 @@ async function seedStandaloneArticles(payload: Payload): Promise<void> {
     },
     ...testWrite,
   });
+  return contact.id;
 }
 
 /**
@@ -241,11 +271,12 @@ async function seedArticleList(payload: Payload, categoryId: number): Promise<vo
 
 /**
  * One of each Section per Locale, in this order: a Hero with the blue cover
- * image, a Products Slider of three products, and a Solutions Section of two
- * solutions. The first product and solution have a green image, and the second
- * a link.
+ * image, a Products Slider of three products, a Solutions Section of two
+ * solutions, a FAQ of two questions, and a Banner whose CTA leads to the Contact
+ * Page. The first product and solution have a green image, and the second a
+ * link. The Banner has the green image too.
  */
-async function seedHomepage(payload: Payload, coverId: number): Promise<void> {
+async function seedHomepage(payload: Payload, coverId: number, contactId: number): Promise<void> {
   const greenImage = await seedImage(payload, {
     name: "zelena.png",
     width: 800,
@@ -290,6 +321,20 @@ async function seedHomepage(payload: Payload, coverId: number): Promise<void> {
             },
           ],
         },
+        {
+          blockType: "faq",
+          heading: "Česta pitanja",
+          items: [
+            { question: "Što je Starter Site?", answer: "Početni predložak web-stranice." },
+            { question: "Tko uređuje sadržaj?", answer: "Urednici u administraciji." },
+          ],
+        },
+        {
+          blockType: "banner",
+          image: greenImage.id,
+          text: "Imate pitanje? Javite nam se.",
+          cta: { label: "Kontaktirajte nas", article: contactId },
+        },
       ],
     },
     ...testWrite,
@@ -329,6 +374,20 @@ async function seedHomepage(payload: Payload, coverId: number): Promise<void> {
               link: { label: "Read our articles", url: "/en/articles" },
             },
           ],
+        },
+        {
+          blockType: "faq",
+          heading: "Frequently asked questions",
+          items: [
+            { question: "What is Starter Site?", answer: "A starter template for websites." },
+            { question: "Who edits the content?", answer: "Editors in the admin." },
+          ],
+        },
+        {
+          blockType: "banner",
+          image: greenImage.id,
+          text: "Have a question? Get in touch.",
+          cta: { label: "Contact us", article: contactId },
         },
       ],
     },

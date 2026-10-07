@@ -26,6 +26,17 @@ export type SectionItem =
     }[]
   | null;
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqItems".
+ */
+export type FaqItems =
+  | {
+      question?: string | null;
+      answer?: string | null;
+      id?: string | null;
+    }[]
+  | null;
+/**
  * Supported timezones in IANA format.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -514,7 +525,7 @@ export interface Footer {
  */
 export interface Homepage {
   id: number;
-  sections?: (HeroSection | ProductsSliderSection | SolutionsSection)[] | null;
+  sections?: (HeroSection | ProductsSliderSection | SolutionsSection | FaqSection | BannerSection)[] | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -551,6 +562,38 @@ export interface SolutionsSection {
   id?: string | null;
   blockName?: string | null;
   blockType: 'solutions';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqSection".
+ */
+export interface FaqSection {
+  heading?: string | null;
+  items?: FaqItems;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'faq';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BannerSection".
+ */
+export interface BannerSection {
+  image?: (number | null) | Media;
+  text?: string | null;
+  /**
+   * Shown only when both the label and the Article are set.
+   */
+  cta?: {
+    label?: string | null;
+    /**
+     * The Contact Page, or any other Article to lead Visitors to.
+     */
+    article?: (number | null) | Article;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'banner';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -596,6 +639,8 @@ export interface HomepageSelect<T extends boolean = true> {
         hero?: T | HeroSectionSelect<T>;
         productsSlider?: T | ProductsSliderSectionSelect<T>;
         solutions?: T | SolutionsSectionSelect<T>;
+        faq?: T | FaqSectionSelect<T>;
+        banner?: T | BannerSectionSelect<T>;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -645,6 +690,41 @@ export interface SectionItemSelect<T extends boolean = true> {
 export interface SolutionsSectionSelect<T extends boolean = true> {
   heading?: T;
   items?: T | SectionItemSelect<T>;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqSection_select".
+ */
+export interface FaqSectionSelect<T extends boolean = true> {
+  heading?: T;
+  items?: T | FaqItemsSelect<T>;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FaqItems_select".
+ */
+export interface FaqItemsSelect<T extends boolean = true> {
+  question?: T;
+  answer?: T;
+  id?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BannerSection_select".
+ */
+export interface BannerSectionSelect<T extends boolean = true> {
+  image?: T;
+  text?: T;
+  cta?:
+    | T
+    | {
+        label?: T;
+        article?: T;
+      };
   id?: T;
   blockName?: T;
 }

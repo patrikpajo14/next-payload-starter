@@ -67,6 +67,7 @@ test.describe("an Editor managing Hero Sections", () => {
       "Welcome to Starter Site",
       "Our products",
       "Our solutions",
+      "Frequently asked questions",
     ]);
 
     await saveSections(request, "en", [
@@ -79,6 +80,7 @@ test.describe("an Editor managing Hero Sections", () => {
       "Welcome to Starter Site",
       "Our products",
       "Our solutions",
+      "Frequently asked questions",
       "Second hero",
       "Third hero",
     ]);
@@ -94,6 +96,7 @@ test.describe("an Editor managing Hero Sections", () => {
       "Welcome to Starter Site",
       "Our products",
       "Our solutions",
+      "Frequently asked questions",
       "Second hero",
     ]);
 
@@ -107,6 +110,7 @@ test.describe("an Editor managing Hero Sections", () => {
       "Dobrodošli na Starter Site",
       "Naši proizvodi",
       "Naša rješenja",
+      "Česta pitanja",
     ]);
   });
 
