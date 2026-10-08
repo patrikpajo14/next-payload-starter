@@ -25,7 +25,14 @@ export default buildConfig({
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET ?? "",
   db: postgresAdapter({
-    pool: { connectionString: process.env.DATABASE_URL ?? "" },
+    pool: {
+      connectionString: process.env.DATABASE_URL ?? "",
+      // Neon sits behind a pooler across the network. Keep-alive probes notice a
+      // socket that died silently (`read ETIMEDOUT`) instead of leaving a query
+      // hanging for minutes. No query timeout: schema introspection is slow.
+      keepAlive: true,
+      connectionTimeoutMillis: 60_000,
+    },
   }),
   // Content locales. Changing `localized` on a field later loses its data, so
   // every translatable field is localized from the start.
