@@ -34,6 +34,10 @@ _Avoid_: Block, widget, component
 A piece of written content with a title, excerpt, cover image, and rich-text body, published at its own Page. Every Article belongs to exactly one Category.
 _Avoid_: Post, blog post, news item
 
+**Featured Article**:
+An Article an Editor has marked so that Sections can pick it out. The mark belongs to the Article itself and is the same in every Locale.
+_Avoid_: Pinned, highlighted, promoted
+
 **Category**:
 A named group of Articles whose title and optional SEO Name are set per Locale. A Category with an SEO Name has its own Article List Page.
 _Avoid_: Tag, topic, section

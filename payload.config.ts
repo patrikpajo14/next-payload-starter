@@ -15,6 +15,7 @@ import { Header } from "./globals/Header";
 import { Homepage } from "./globals/Homepage";
 import { defaultLocale, localeLabels, locales } from "./lib/i18n/locales";
 import { mediaStorage } from "./lib/media-storage";
+import { requireEnv } from "./lib/require-env";
 
 export default buildConfig({
   admin: {
@@ -23,10 +24,10 @@ export default buildConfig({
   collections: [Users, Media, Categories, Articles, ContactSubmissions],
   globals: [Header, Footer, Homepage],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET ?? "",
+  secret: requireEnv("PAYLOAD_SECRET"),
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL ?? "",
+      connectionString: requireEnv("DATABASE_URL"),
       // Neon sits behind a pooler across the network. Keep-alive probes notice a
       // socket that died silently (`read ETIMEDOUT`) instead of leaving a query
       // hanging for minutes. No query timeout: schema introspection is slow.

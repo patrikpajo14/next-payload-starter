@@ -19,13 +19,20 @@ const data = {
   visitorLocale: "hr",
 } as const;
 
+/** Stores one the way the server action does: access overridden. */
+function seedSubmission() {
+  return payload.create({ collection: "contact-submissions", data, overrideAccess: true });
+}
+
 describe("Contact Submissions with access control on", () => {
-  it("lets a Visitor create one, with their Locale", async () => {
-    const created = await payload.create({
-      collection: "contact-submissions",
-      data,
-      overrideAccess: false,
-    });
+  it("denies a Visitor creating one", async () => {
+    await expect(
+      payload.create({ collection: "contact-submissions", data, overrideAccess: false }),
+    ).rejects.toThrow();
+  });
+
+  it("stores one written with access overridden, with the Visitor's Locale", async () => {
+    const created = await seedSubmission();
 
     expect(created.visitorLocale).toBe("hr");
   });
@@ -37,11 +44,7 @@ describe("Contact Submissions with access control on", () => {
   });
 
   it("denies a Visitor reading one by id", async () => {
-    const created = await payload.create({
-      collection: "contact-submissions",
-      data,
-      overrideAccess: false,
-    });
+    const created = await seedSubmission();
 
     await expect(
       payload.findByID({ collection: "contact-submissions", id: created.id, overrideAccess: false }),
@@ -49,6 +52,7 @@ describe("Contact Submissions with access control on", () => {
   });
 
   it("lets an Editor read them", async () => {
+    await seedSubmission();
     // The seeded Editor: creating another user would break tests that count them.
     const {
       docs: [user],

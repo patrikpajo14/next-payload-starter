@@ -89,7 +89,7 @@ test.describe("Contact Form", () => {
     expect(response.status()).toBe(403);
   });
 
-  test("allows the public to create a submission through the API", async ({ request }) => {
+  test("denies the public creating a submission through the API", async ({ request }) => {
     const response = await request.post("/api/contact-submissions", {
       data: {
         firstName: "Api",
@@ -102,6 +102,6 @@ test.describe("Contact Form", () => {
       },
     });
 
-    expect(response.status()).toBe(201);
+    expect(response.status()).toBe(403);
   });
 });
