@@ -43,8 +43,9 @@ export async function submitContactForm(
     await payload.create({
       collection: "contact-submissions",
       data: { ...result.data, visitorLocale: locale },
-      // Public create: the collection's own access rule applies.
-      overrideAccess: false,
+      // The collection denies create to everyone: this action is the only
+      // writer, and has already run the honeypot and validation above.
+      overrideAccess: true,
     });
   } catch (error) {
     payload.logger.error({ err: error }, "Contact Submission was not stored");

@@ -20,11 +20,17 @@ const data = {
 } as const;
 
 describe("Contact Submissions with access control on", () => {
-  it("lets a Visitor create one, with their Locale", async () => {
+  it("denies a Visitor creating one", async () => {
+    await expect(
+      payload.create({ collection: "contact-submissions", data, overrideAccess: false }),
+    ).rejects.toThrow();
+  });
+
+  it("stores one written with access overridden, with the Visitor's Locale", async () => {
     const created = await payload.create({
       collection: "contact-submissions",
       data,
-      overrideAccess: false,
+      overrideAccess: true,
     });
 
     expect(created.visitorLocale).toBe("hr");
@@ -40,7 +46,7 @@ describe("Contact Submissions with access control on", () => {
     const created = await payload.create({
       collection: "contact-submissions",
       data,
-      overrideAccess: false,
+      overrideAccess: true,
     });
 
     await expect(
@@ -49,6 +55,7 @@ describe("Contact Submissions with access control on", () => {
   });
 
   it("lets an Editor read them", async () => {
+    await payload.create({ collection: "contact-submissions", data, overrideAccess: true });
     // The seeded Editor: creating another user would break tests that count them.
     const {
       docs: [user],

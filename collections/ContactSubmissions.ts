@@ -3,8 +3,10 @@ import type { CollectionConfig } from "payload";
 import { locales } from "../lib/i18n/locales";
 
 /**
- * Messages Visitors send through the Contact Form. Anyone can create one;
- * only Editors (signed in) can read or delete them, and nobody edits them.
+ * Messages Visitors send through the Contact Form. Nobody creates one through
+ * the API: the `submitContactForm` server action writes with `overrideAccess`,
+ * after the honeypot and validation. Only Editors (signed in) can read or
+ * delete them, and nobody edits them.
  */
 export const ContactSubmissions: CollectionConfig = {
   slug: "contact-submissions",
@@ -14,7 +16,7 @@ export const ContactSubmissions: CollectionConfig = {
   },
   defaultSort: "-createdAt",
   access: {
-    create: () => true,
+    create: () => false,
     read: ({ req }) => Boolean(req.user),
     update: () => false,
     delete: ({ req }) => Boolean(req.user),
