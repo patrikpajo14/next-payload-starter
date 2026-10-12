@@ -69,6 +69,8 @@ export const Articles: CollectionConfig = {
       name: "publishedAt",
       type: "date",
       required: true,
+      // Article Lists sort by it.
+      index: true,
       defaultValue: () => new Date().toISOString(),
       admin: { position: "sidebar", date: { pickerAppearance: "dayOnly" } },
     },

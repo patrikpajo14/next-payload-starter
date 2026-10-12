@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 import type { Where } from "payload";
 
-import type { Article, Category } from "@/payload-types";
+import type { Article, Category, Media } from "@/payload-types";
 
 import { CONTENT_TAG } from "./cache";
 import type { Locale } from "./i18n/locales";
@@ -24,14 +24,16 @@ const publicRead = { overrideAccess: false, draft: false, fallbackLocale: false 
  * True when the Article is a Standalone Article with a title in this Locale:
  * its Category has no SEO Name here.
  */
-function isPublicStandalone(article: Article): article is ArticleWithCategory {
+function isPublicStandalone<A extends Pick<Article, "title" | "category">>(
+  article: A,
+): article is A & { category: Category } {
   return Boolean(article.title) && hostsStandaloneArticles(article.category);
 }
 
 /** True when the Article has a title in this Locale and its Category has an SEO Name here. */
-function isPublicCategoryArticle(
-  article: Article,
-): article is Article & { category: Category & { seoName: string } } {
+function isPublicCategoryArticle<A extends Pick<Article, "title" | "category">>(
+  article: A,
+): article is A & { category: Category & { seoName: string } } {
   return (
     Boolean(article.title) && typeof article.category === "object" && Boolean(article.category.seoName)
   );
@@ -49,11 +51,22 @@ export const getStandaloneArticle = unstable_cache(
       ...publicRead,
       collection: "articles",
       locale,
-      where: { slug: { equals: slug } },
+      // A Category with no SEO Name in this Locale hosts Standalone Articles; a
+      // slug is unique among them, so one match is the whole answer. A cleared
+      // SEO Name may be stored as null or as an empty string.
+      where: {
+        and: [
+          { slug: { equals: slug } },
+          { or: [{ "category.seoName": { exists: false } }, { "category.seoName": { equals: "" } }] },
+        ],
+      },
       // Depth 2 populates the privacy policy Article with its Category, to link it.
       depth: 2,
+      limit: 1,
     });
-    return docs.find(isPublicStandalone) ?? null;
+    // The `where` is the lookup; this guards a missing title.
+    const article = docs[0];
+    return article && isPublicStandalone(article) ? article : null;
   },
   ["standalone-article"],
   { tags: [CONTENT_TAG], revalidate: 3600 },
@@ -103,10 +116,15 @@ export const getCategoryArticle = unstable_cache(
 /** Articles on each Article List page. */
 const ARTICLES_PER_PAGE = 9;
 
+/** What an Article card shows: the list read selects only these fields. */
+export type ArticleCard = Pick<Article, "id" | "title" | "slug" | "publishedAt"> & {
+  coverImage?: number | Pick<Media, "id" | "url" | "width" | "height"> | null;
+};
+
 /** One numbered page of a Category's Article List. */
 export interface ArticleListPage {
   category: Category & { seoName: string };
-  articles: Article[];
+  articles: ArticleCard[];
   page: number;
   totalPages: number;
 }
@@ -147,6 +165,9 @@ export const getArticleListPage = unstable_cache(
       limit: ARTICLES_PER_PAGE,
       page,
       depth: 1,
+      // Cards need no body or relationships; the cover image needs its size and URL.
+      select: { title: true, slug: true, coverImage: true, publishedAt: true },
+      populate: { media: { url: true, width: true, height: true } },
     });
     return { category: { ...category, seoName }, articles: docs, page, totalPages };
   },
@@ -154,8 +175,12 @@ export const getArticleListPage = unstable_cache(
   { tags: [CONTENT_TAG], revalidate: 3600 },
 );
 
-/** Every Article a Visitor can read in this Locale, with its Category. For static generation. */
-async function listPublicArticles(locale: Locale): Promise<Article[]> {
+/**
+ * The slug, title and Category of every Article a Visitor can read in this
+ * Locale. For static generation: no `body`, and the Category carries only the
+ * fields the filters below look at.
+ */
+async function listPublicArticles(locale: Locale) {
   const payload = await getPayload({ config });
   const { docs } = await payload.find({
     ...publicRead,
@@ -163,6 +188,8 @@ async function listPublicArticles(locale: Locale): Promise<Article[]> {
     locale,
     depth: 1,
     pagination: false,
+    select: { slug: true, category: true, title: true },
+    populate: { categories: { seoName: true, title: true } },
   });
   return docs;
 }
