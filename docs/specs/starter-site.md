@@ -105,11 +105,9 @@ A starter site with a Homepage, an Article List per Category, Article pages, Sta
 
 ## Out of Scope
 
-- Live Preview
 - Product pages and Solution pages (their items are inline in Sections)
 - `hreflang` alternates and localized SEO metadata beyond basic titles
-- Email notifications and rate limiting on the Contact Form
-- Per-locale publish status and Drafts on globals
+- Per-locale publish status, and Drafts on globals other than the Homepage
 - Shared ISR cache handler and multi-instance deployment
 - Categories as filters, tags, and authors
 - Search
