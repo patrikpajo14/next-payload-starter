@@ -71,6 +71,8 @@ Tests run against their own Neon branch. **Every run deletes all data in it**, a
 
    ```bash
    pnpm test:int   # Vitest against the Local API
+   # One spec, reusing the seeded database from the last run (seconds, not minutes):
+   SKIP_DB_RESET=1 pnpm vitest run tests/int/<name>.int.spec.ts
    pnpm test:e2e   # Playwright against a built app
    pnpm test       # both
    ```

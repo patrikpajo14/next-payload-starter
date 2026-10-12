@@ -1,0 +1,3 @@
+#!/bin/sh
+# Fast checks only; the integration and e2e suites run in CI.
+pnpm typecheck && pnpm lint

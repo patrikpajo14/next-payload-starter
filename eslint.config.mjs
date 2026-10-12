@@ -13,6 +13,21 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // Tests pass optional variables on to child processes, where "" is the value.
+    ignores: ["tests/**"],
+    rules: {
+      // An empty fallback hides a missing secret until something fails later.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "LogicalExpression[operator=/^(\\?\\?|\\|\\|)$/][left.object.object.name='process'][left.object.property.name='env'][right.value='']",
+          message: 'Do not fall back to "" on process.env. Use requireEnv() from lib/require-env.ts.',
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
