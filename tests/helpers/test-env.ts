@@ -6,6 +6,9 @@ import { assertSafeTestDatabase } from "./safe-database";
 /** Secret for the app under test. Never the real one: it only signs test sessions. */
 const TEST_PAYLOAD_SECRET = "test-only-secret-not-for-production";
 
+/** Salt for IP hashes in tests. Never the real one. */
+const TEST_IP_HASH_SALT = "test-only-ip-salt";
+
 /** Reads a variable the tests cannot run without. */
 export function requiredEnv(name: string): string {
   const value = process.env[name];
@@ -44,12 +47,14 @@ export function loadTestEnv(cwd = process.cwd()): Record<string, string> {
   // keeps a developer's real bucket out of test runs.
   process.env.S3_BUCKET = "";
   process.env.PAYLOAD_SECRET = process.env.TEST_PAYLOAD_SECRET ?? TEST_PAYLOAD_SECRET;
+  process.env.IP_HASH_SALT = process.env.TEST_IP_HASH_SALT ?? TEST_IP_HASH_SALT;
   assertSafeTestDatabase();
 
   return {
     DATABASE_URL: testUrl,
     PAYLOAD_SECRET: process.env.PAYLOAD_SECRET,
     TEST_DATABASE_URL: testUrl,
+    IP_HASH_SALT: process.env.IP_HASH_SALT,
     S3_BUCKET: "",
     TEST_EDITOR_EMAIL: process.env.TEST_EDITOR_EMAIL ?? "",
     TEST_EDITOR_PASSWORD: process.env.TEST_EDITOR_PASSWORD ?? "",

@@ -27,7 +27,7 @@ export async function saveSections(
 ) {
   const response = await request.post(`/api/globals/homepage?locale=${locale}`, {
     headers: await editorHeaders(request),
-    data: { sections },
+    data: { sections, _status: "published" },
   });
   expect(response.ok()).toBe(true);
 }

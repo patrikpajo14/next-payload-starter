@@ -1,7 +1,7 @@
 import config from "@payload-config";
 import { getPayload } from "payload";
 import type { Payload } from "payload";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { testWrite } from "../helpers/local-api";
 import { paragraphs } from "../helpers/rich-text";
@@ -93,5 +93,107 @@ describe("Drafts with access control on", () => {
 
     const { docs } = await visitorFind("u-izradi");
     expect(docs.map((doc) => doc.title)).toEqual(["Objavljeni naslov"]);
+  });
+});
+
+describe("Featured Article", () => {
+  it("is off by default", async () => {
+    const article = await createArticle(`plain-${Date.now()}`, "Obican", "published");
+
+    expect(article.featured).toBe(false);
+  });
+
+  it("is the same in every Locale", async () => {
+    const article = await createArticle(`feat-${Date.now()}`, "Istaknut", "published");
+    await payload.update({
+      collection: "articles",
+      id: article.id,
+      locale: "en",
+      data: { title: "Featured", slug: `featured-${Date.now()}`, featured: true },
+      ...testWrite,
+    });
+
+    const hr = await payload.findByID({ collection: "articles", id: article.id, locale: "hr" });
+    expect(hr.featured).toBe(true);
+  });
+});
+
+describe("Homepage Drafts", () => {
+  const sections = (heading: string) => [{ blockType: "hero" as const, heading }];
+  let seeded: Awaited<ReturnType<typeof readHomepage>>;
+
+  const readHomepage = () =>
+    payload.findGlobal({
+      slug: "homepage",
+      locale: "hr",
+      fallbackLocale: false,
+      draft: true,
+      overrideAccess: true,
+    });
+
+  // The seeded Homepage is shared with later test files: put it back.
+  beforeAll(async () => {
+    seeded = await readHomepage();
+  });
+  afterAll(async () => {
+    await payload.updateGlobal({
+      slug: "homepage",
+      locale: "hr",
+      data: { sections: seeded.sections, _status: "published" },
+      ...testWrite,
+    });
+  });
+
+  it("keeps a saved Draft out of a Visitor's read and shows it to an Editor", async () => {
+    await payload.updateGlobal({
+      slug: "homepage",
+      locale: "hr",
+      data: { sections: sections("Objavljeno"), _status: "published" },
+      ...testWrite,
+    });
+    await payload.updateGlobal({
+      slug: "homepage",
+      locale: "hr",
+      data: { sections: sections("Nacrt") },
+      draft: true,
+      ...testWrite,
+    });
+
+    const visitor = await payload.findGlobal({
+      slug: "homepage",
+      locale: "hr",
+      overrideAccess: false,
+    });
+    const editor = await payload.findGlobal({
+      slug: "homepage",
+      locale: "hr",
+      draft: true,
+      overrideAccess: true,
+    });
+
+    expect(visitor.sections?.[0]).toMatchObject({ heading: "Objavljeno" });
+    expect(editor.sections?.[0]).toMatchObject({ heading: "Nacrt" });
+  });
+
+  it("is not returned to a Visitor who asks for drafts", async () => {
+    const visitor = await payload.findGlobal({
+      slug: "homepage",
+      locale: "hr",
+      draft: true,
+      overrideAccess: false,
+    });
+
+    expect(visitor.sections?.[0]).toMatchObject({ heading: "Objavljeno" });
+  });
+
+  it("has Live Preview pointing at the Locale's Homepage", async () => {
+    const homepage = payload.config.globals.find((g) => g.slug === "homepage");
+    const livePreview = homepage?.admin?.livePreview;
+    const url = livePreview && "url" in livePreview ? livePreview.url : undefined;
+
+    expect(typeof url).toBe("function");
+    if (typeof url !== "function") return;
+    const args = { locale: { code: "en" } } as unknown as Parameters<typeof url>[0];
+    expect(await url(args)).toBe("/en");
   });
 });

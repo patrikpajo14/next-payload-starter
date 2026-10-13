@@ -66,6 +66,16 @@ export const Articles: CollectionConfig = {
       },
     },
     {
+      name: "featured",
+      type: "checkbox",
+      defaultValue: false,
+      // Not localized: the mark is the same in every Locale.
+      admin: {
+        position: "sidebar",
+        description: "Featured Articles can be picked out by Sections of the Homepage.",
+      },
+    },
+    {
       name: "publishedAt",
       type: "date",
       required: true,

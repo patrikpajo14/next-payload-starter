@@ -67,3 +67,40 @@ describe("Contact Submissions with access control on", () => {
     expect(docs.length).toBeGreaterThan(0);
   });
 });
+
+describe("Contact Submission ipHash", () => {
+  const ipHash = "a".repeat(64);
+  const seedWithIpHash = () =>
+    payload.create({
+      collection: "contact-submissions",
+      data: { ...data, ipHash },
+      overrideAccess: true,
+    });
+
+  it("is stored when created with access overridden", async () => {
+    const created = await seedWithIpHash();
+
+    const stored = await payload.findByID({
+      collection: "contact-submissions",
+      id: created.id,
+      overrideAccess: true,
+    });
+    expect(stored.ipHash).toBe(ipHash);
+  });
+
+  it("is never returned to an Editor", async () => {
+    await seedWithIpHash();
+    const {
+      docs: [user],
+    } = await payload.find({ collection: "users", overrideAccess: true });
+
+    const { docs } = await payload.find({
+      collection: "contact-submissions",
+      user: { ...user, collection: "users" },
+      overrideAccess: false,
+    });
+
+    expect(docs.length).toBeGreaterThan(0);
+    for (const doc of docs) expect(doc).not.toHaveProperty("ipHash");
+  });
+});
