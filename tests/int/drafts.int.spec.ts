@@ -3,6 +3,8 @@ import { getPayload } from "payload";
 import type { Payload } from "payload";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { readHomepageSections } from "@/lib/homepage";
+
 import { testWrite } from "../helpers/local-api";
 import { paragraphs } from "../helpers/rich-text";
 
@@ -186,7 +188,25 @@ describe("Homepage Drafts", () => {
     expect(visitor.sections?.[0]).toMatchObject({ heading: "Objavljeno" });
   });
 
-  it("has Live Preview pointing at the Locale's Homepage", async () => {
+  it("gives the Live Preview read the Draft only with a signed-in Editor", async () => {
+    const { docs } = await payload.find({ collection: "users", limit: 1, overrideAccess: true });
+    const editor = { ...docs[0], collection: "users" as const };
+
+    const preview = await readHomepageSections(payload, "hr", { draft: true, user: editor });
+    // Draft Mode without a Payload session: an expired sign-in, or a stray cookie.
+    const signedOut = await readHomepageSections(payload, "hr", { draft: true });
+
+    expect(preview[0]).toMatchObject({ heading: "Nacrt" });
+    expect(signedOut[0]).toMatchObject({ heading: "Objavljeno" });
+  });
+
+  it("keeps the Visitors' read published while a Draft exists", async () => {
+    const sections = await readHomepageSections(payload, "hr");
+
+    expect(sections[0]).toMatchObject({ heading: "Objavljeno" });
+  });
+
+  it("has Live Preview entering the Locale's Homepage through the preview route", async () => {
     const homepage = payload.config.globals.find((g) => g.slug === "homepage");
     const livePreview = homepage?.admin?.livePreview;
     const url = livePreview && "url" in livePreview ? livePreview.url : undefined;
@@ -194,6 +214,6 @@ describe("Homepage Drafts", () => {
     expect(typeof url).toBe("function");
     if (typeof url !== "function") return;
     const args = { locale: { code: "en" } } as unknown as Parameters<typeof url>[0];
-    expect(await url(args)).toBe("/en");
+    expect(await url(args)).toBe("/api/preview?locale=en");
   });
 });

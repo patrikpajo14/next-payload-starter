@@ -132,8 +132,9 @@ export const Homepage: GlobalConfig = {
   versions: { drafts: true },
   admin: {
     livePreview: {
-      // The Homepage lives at the Locale's root: `/hr`, `/en`.
-      url: ({ locale }) => `/${locale.code}`,
+      // Signs the Editor into Next's Draft Mode, then redirects to the
+      // Locale's Homepage (`/hr`, `/en`), which then reads the latest Draft.
+      url: ({ locale }) => `/api/preview?locale=${locale.code}`,
     },
   },
   fields: [

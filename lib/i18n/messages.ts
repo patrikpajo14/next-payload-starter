@@ -22,6 +22,9 @@ export interface Messages {
   products: string;
   previousProduct: string;
   nextProduct: string;
+  /** Banner shown to an Editor previewing Drafts. */
+  previewNotice: string;
+  exitPreview: string;
   contact: ContactMessages;
 }
 
@@ -65,6 +68,8 @@ export const messages: Record<Locale, Messages> = {
     products: "Proizvodi",
     previousProduct: "Prethodni proizvod",
     nextProduct: "Sljedeći proizvod",
+    previewNotice: "Pregled nacrta: posjetitelji vide samo objavljeni sadržaj.",
+    exitPreview: "Izađi iz pregleda",
     contact: {
       firstName: "Ime",
       lastName: "Prezime",
@@ -101,6 +106,8 @@ export const messages: Record<Locale, Messages> = {
     products: "Products",
     previousProduct: "Previous product",
     nextProduct: "Next product",
+    previewNotice: "Draft preview: Visitors see only published content.",
+    exitPreview: "Exit preview",
     contact: {
       firstName: "First name",
       lastName: "Last name",

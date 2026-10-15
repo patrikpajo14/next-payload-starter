@@ -28,6 +28,10 @@ A bilingual (Croatian, English) marketing and articles website built with Next.j
 
    The site is at <http://localhost:3000> and the CMS admin at <http://localhost:3000/admin>. Payload creates the database tables on first start. `next build` also reads `DATABASE_URL`, because it prerenders Pages from the database, so set it wherever you build.
 
+### Previewing Homepage Drafts
+
+In the admin, open the Homepage and turn on Live Preview. The pane shows the latest Draft and refreshes each time you click **Save Draft** (there is no autosave, so it does not update while you type). Visitors keep seeing the published Homepage until you publish. Previewing turns on Next's Draft Mode for your browser until you close it; a banner on the site says so and has an **Exit preview** button.
+
 ## Environment variables
 
 | Variable | Required | Purpose |
