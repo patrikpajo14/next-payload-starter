@@ -82,6 +82,8 @@ Tests run against their own Neon branch. **Every run deletes all data in it**, a
    pnpm test       # both
    ```
 
+In CI (`.github/workflows/test.yml`) every run creates its own Neon branch from the project's default branch and deletes it afterwards, so no `TEST_DATABASE_URL` secret is needed. It needs the `NEON_API_KEY` repository secret, the `NEON_PROJECT_ID` repository variable, and the `TEST_EDITOR_EMAIL` and `TEST_EDITOR_PASSWORD` secrets.
+
 ## Scripts
 
 | Script | What it does |

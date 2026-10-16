@@ -5,12 +5,6 @@ on:
   push:
     branches: [main]
 
-# Every run resets the same Neon test branch, so runs must never overlap.
-# Queued runs wait instead of cancelling one that is mid-reset.
-concurrency:
-  group: neon-test-database
-  cancel-in-progress: false
-
 permissions:
   contents: read
 
@@ -20,7 +14,7 @@ jobs:
     timeout-minutes: 30
     env:
       # Repository secrets. A pull request from a fork gets none of them, so its run fails at setup.
-      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      # TEST_DATABASE_URL is not one of them: each run creates its own Neon branch (below).
       TEST_EDITOR_EMAIL: ${{ secrets.TEST_EDITOR_EMAIL }}
       TEST_EDITOR_PASSWORD: ${{ secrets.TEST_EDITOR_PASSWORD }}
     steps:
@@ -33,6 +27,28 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+
+      # Each run gets its own Neon branch, so runs cannot clash over one shared
+      # test database and the reset in the tests only ever wipes a throwaway copy.
+      # `expires_at` removes the branch even when the cleanup step below never runs.
+      - name: Set the test branch expiry
+        run: echo "BRANCH_EXPIRES_AT=$(date -u -d '+2 hours' +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Create a Neon branch for this run
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          expires_at: ${{ env.BRANCH_EXPIRES_AT }}
+
+      - name: Point the tests at the new branch
+        env:
+          DB_URL: ${{ steps.neon.outputs.db_url_pooled }}
+        run: |
+          echo "::add-mask::$DB_URL"
+          echo "TEST_DATABASE_URL=$DB_URL" >> "$GITHUB_ENV"
 
       - run: pnpm install --frozen-lockfile
 
@@ -54,3 +70,11 @@ jobs:
           name: playwright-results
           path: test-results/
           retention-days: 7
+
+      - name: Delete the Neon branch
+        if: always() && steps.neon.outputs.branch_id != ''
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: ${{ steps.neon.outputs.branch_id }}
