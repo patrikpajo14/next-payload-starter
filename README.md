@@ -39,6 +39,8 @@ In the admin, open the Homepage and turn on Live Preview. The pane shows the lat
 | `DATABASE_URL` | yes | Pooled Neon connection string of this environment's branch, such as `postgresql://user:password@ep-xxx-pooler.region.aws.neon.tech/dbname?sslmode=verify-full` |
 | `PAYLOAD_SECRET` | yes | Long random string that signs sessions. Generate with `openssl rand -hex 32` |
 | `IP_HASH_SALT` | yes | Salt for the hash of a Visitor's IP address stored on Contact Submissions. Generate with `openssl rand -hex 32` |
+| `CONTACT_NOTIFY_EMAIL`, `RESEND_API_KEY` | production | Each stored Contact Submission is emailed to `CONTACT_NOTIFY_EMAIL` through [Resend](https://resend.com). Leave either empty in development and nothing is sent. A failed email is logged and never fails the Visitor |
+| `RESEND_FROM_EMAIL`, `RESEND_FROM_NAME` | no | Sender of that email. Defaults to Resend's test sender `onboarding@resend.dev`, which only delivers to your own Resend account |
 | `S3_BUCKET`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | production | S3-compatible storage (Cloudflare R2) for uploads. Leave `S3_BUCKET` empty in development and uploads go to `./media`. Set all four or none: a partial setup refuses to start |
 | `S3_REGION` | no | Defaults to `auto`, which R2 expects |
 

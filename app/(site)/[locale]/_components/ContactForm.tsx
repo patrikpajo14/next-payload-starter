@@ -103,9 +103,9 @@ export function ContactForm({
       <div aria-hidden="true" className="absolute -left-[9999px]">
         <input type="text" name="website" tabIndex={-1} autoComplete="off" />
       </div>
-      {state.status === "failed" ? (
+      {state.status === "failed" || state.status === "rate-limited" ? (
         <p role="alert" className="text-red-700">
-          {t.failure}
+          {state.status === "rate-limited" ? t.rateLimited : t.failure}
         </p>
       ) : null}
       <button
