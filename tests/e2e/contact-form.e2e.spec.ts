@@ -104,4 +104,31 @@ test.describe("Contact Form", () => {
 
     expect(response.status()).toBe(403);
   });
+
+  test("refuses the sixth submission from one address within an hour", async ({ browser }) => {
+    // A unique address, so no other test or run counts against this one.
+    const context = await browser.newContext({
+      extraHTTPHeaders: { "x-forwarded-for": `203.0.113.${Math.floor(Math.random() * 250) + 1}` },
+    });
+    const page = await context.newPage();
+
+    for (let i = 1; i <= 6; i++) {
+      await page.goto("/en/contact");
+      await page.getByLabel("First name").fill("Rate");
+      await page.getByLabel("Last name").fill("Limit-E2E");
+      await page.getByLabel("Phone").fill("123");
+      await page.getByLabel("Address").fill("Ilica 1");
+      await page.getByLabel("Postal code").fill("10000");
+      await page.getByLabel("Message").fill(`Message ${i}`);
+      await page.getByLabel(/I have read and accept/).check();
+      await page.getByRole("button", { name: "Send" }).click();
+
+      if (i < 6) {
+        await expect(page.getByText("Thank you! Your message has been sent.")).toBeVisible();
+      }
+    }
+
+    await expect(page.getByText("You have sent too many messages. Please try again in an hour.")).toBeVisible();
+    await context.close();
+  });
 });

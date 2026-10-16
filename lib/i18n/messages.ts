@@ -46,6 +46,8 @@ export interface ContactMessages {
   sending: string;
   success: string;
   failure: string;
+  /** Shown when a Visitor sent too many messages in the last hour. */
+  rateLimited: string;
   errors: {
     required: string;
     email: string;
@@ -85,6 +87,7 @@ export const messages: Record<Locale, Messages> = {
       sending: "Slanje…",
       success: "Hvala! Vaša je poruka poslana.",
       failure: "Poruka nije poslana. Pokušajte ponovno.",
+      rateLimited: "Poslali ste previše poruka. Pokušajte ponovno za sat vremena.",
       errors: {
         required: "Ovo polje je obavezno.",
         email: "Unesite ispravnu adresu e-pošte.",
@@ -123,6 +126,7 @@ export const messages: Record<Locale, Messages> = {
       sending: "Sending…",
       success: "Thank you! Your message has been sent.",
       failure: "Your message was not sent. Please try again.",
+      rateLimited: "You have sent too many messages. Please try again in an hour.",
       errors: {
         required: "This field is required.",
         email: "Enter a valid email address.",
