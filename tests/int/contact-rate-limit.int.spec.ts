@@ -43,7 +43,7 @@ describe("isContactRateLimited", () => {
     expect(await isContactRateLimited(payload, ipHash)).toBe(false);
   });
 
-  it("refuses the sixth Contact Submission within an hour", async () => {
+  it("reports a Visitor with five Contact Submissions in the last hour as limited", async () => {
     const ipHash = uniqueHash();
     await seed(ipHash, CONTACT_RATE_LIMIT);
 

@@ -17,13 +17,14 @@ export async function notifyContactSubmission(
   const to = env.CONTACT_NOTIFY_EMAIL?.trim();
   if (!to) return;
 
+  const name = `${submission.firstName} ${submission.lastName}`;
   try {
     await payload.sendEmail({
       to,
       replyTo: submission.email,
-      subject: `New message from ${submission.firstName} ${submission.lastName}`,
+      subject: `New message from ${name}`,
       text: [
-        `Name: ${submission.firstName} ${submission.lastName}`,
+        `Name: ${name}`,
         `Email: ${submission.email ?? "-"}`,
         `Phone: ${submission.phone}`,
         `Address: ${submission.address}, ${submission.postalCode}`,

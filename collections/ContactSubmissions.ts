@@ -5,8 +5,10 @@ import { locales } from "../lib/i18n/locales";
 /**
  * Messages Visitors send through the Contact Form. Nobody creates one through
  * the API: the `submitContactForm` server action writes with `overrideAccess`,
- * after the honeypot and validation, and it stores a salted hash of the
- * Visitor's IP address in `ipHash`. Only Editors (signed in) can read or
+ * after the honeypot, validation and hourly rate limit, and it stores a salted
+ * hash of the Visitor's IP address in `ipHash`. The hash is personal data: it
+ * is kept to rate limit and spot abuse, and goes when an Editor deletes the
+ * Submission. Only Editors (signed in) can read or
  * delete them, and nobody edits them.
  */
 export const ContactSubmissions: CollectionConfig = {

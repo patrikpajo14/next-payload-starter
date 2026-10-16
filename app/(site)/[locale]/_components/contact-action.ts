@@ -8,8 +8,9 @@ import { getPayload } from "payload";
 import { notifyContactSubmission } from "@/lib/contact-notification";
 import { isContactRateLimited } from "@/lib/contact-rate-limit";
 import { CONTACT_FIELDS, validateContactForm } from "@/lib/contact-form";
-import type { ContactField } from "@/lib/contact-form";
+import type { ContactData, ContactField } from "@/lib/contact-form";
 import { hasLocale } from "@/lib/i18n/locales";
+import type { Locale } from "@/lib/i18n/locales";
 import { clientIp, hashIp } from "@/lib/ip-hash";
 import { requireEnv } from "@/lib/require-env";
 
@@ -48,24 +49,26 @@ export async function submitContactForm(
   if (!result.ok) return { status: "invalid", values, errors: result.errors };
 
   const payload = await getPayload({ config });
+  let submission: ContactData & { visitorLocale: Locale };
   try {
     const ip = clientIp(await headers());
     const ipHash = ip ? hashIp(ip, requireEnv("IP_HASH_SALT")) : undefined;
     if (ipHash && (await isContactRateLimited(payload, ipHash))) {
       return { status: "rate-limited", values, errors: {} };
     }
-    const data = { ...result.data, visitorLocale: locale };
+    submission = { ...result.data, visitorLocale: locale };
     await payload.create({
       collection: "contact-submissions",
-      data: { ...data, ipHash },
+      data: { ...submission, ipHash },
       // The collection denies create to everyone: this action is the only
       // writer, and has already run the honeypot, validation and rate limit above.
       overrideAccess: true,
     });
-    after(() => notifyContactSubmission(payload, data));
   } catch (error) {
     payload.logger.error({ err: error }, "Contact Submission was not stored");
     return { status: "failed", values, errors: {} };
   }
+  // Outside the try: the Submission is stored, so a failure here must not fail the Visitor.
+  after(() => notifyContactSubmission(payload, submission));
   return { status: "success", values: {}, errors: {} };
 }
