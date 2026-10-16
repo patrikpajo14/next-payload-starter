@@ -1,0 +1,150 @@
+name: Create/Delete Branch for Pull Request
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  setup:
+    name: Setup
+    outputs:
+      branch: ${{ steps.branch_name.outputs.current_branch }}
+    runs-on: ubuntu-latest
+    steps:
+      # Read through env, never inside the script: a branch name is attacker-controlled
+      # on a fork pull request, and tj-actions/branch-names@v8 runs it as shell code.
+      - name: Get branch name
+        id: branch_name
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: echo "current_branch=$HEAD_REF" >> "$GITHUB_OUTPUT"
+
+  create_neon_branch:
+    name: Create Neon Branch
+    outputs:
+      db_url: ${{ steps.create_neon_branch_encode.outputs.db_url }}
+      db_url_pooled: ${{ steps.create_neon_branch_encode.outputs.db_url_pooled }}
+    needs: setup
+    if: |
+      github.event_name == 'pull_request' && (
+      github.event.action == 'synchronize'
+      || github.event.action == 'opened'
+      || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch expiration date as an env variable (2 weeks from now)
+        id: get_expiration_date
+        run: echo "EXPIRES_AT=$(date -u --date '+14 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+      - name: Create Neon Branch
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          expires_at: ${{ env.EXPIRES_AT }}
+      # The action masks the connection strings, and GitHub drops a masked value from a
+      # job output. Base64 changes the value so it survives; the test job decodes it.
+      - name: Encode connection strings for the next job
+        id: create_neon_branch_encode
+        env:
+          DB_URL: ${{ steps.create_neon_branch.outputs.db_url }}
+          DB_URL_POOLED: ${{ steps.create_neon_branch.outputs.db_url_pooled }}
+        run: |
+          echo "db_url=$(printf '%s' "$DB_URL" | base64 -w0)" >> "$GITHUB_OUTPUT"
+          echo "db_url_pooled=$(printf '%s' "$DB_URL_POOLED" | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+  # Runs the suite against the pull request's own Neon branch. Every run deletes all
+  # documents in that branch (never the parent), so runs of different pull requests
+  # cannot disturb each other. Skipped when the pull request is closed.
+  test:
+    name: Test
+    needs: create_neon_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      # Repository secrets. A pull request from a fork gets none of them, so its run fails at setup.
+      TEST_EDITOR_EMAIL: ${{ secrets.TEST_EDITOR_EMAIL }}
+      TEST_EDITOR_PASSWORD: ${{ secrets.TEST_EDITOR_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # Reads the pnpm version from `packageManager` in package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # The tests read the pooled URL as TEST_DATABASE_URL and refuse to run without it.
+      - name: Use the pull request's Neon branch as the test database
+        env:
+          ENCODED_DB_URL: ${{ needs.create_neon_branch.outputs.db_url_pooled }}
+        run: |
+          url="$(printf '%s' "$ENCODED_DB_URL" | base64 -d)"
+          echo "::add-mask::$url"
+          echo "TEST_DATABASE_URL=$url" >> "$GITHUB_ENV"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+      - run: pnpm lint
+
+      - name: Integration tests
+        run: pnpm test:int
+
+      # Playwright drives the Google Chrome preinstalled on the runner (channel: "chrome").
+      - name: End-to-end tests
+        run: pnpm test:e2e
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
+
+  # Following the step above, which runs database migrations, you may want to check
+  # for schema changes in your database. We recommend using the following action to
+  # post a comment to your pull request with the schema diff. For this action to work,
+  # you also need to give permissions to the workflow job to be able to post comments
+  # and read your repository contents. Add the following permissions to the workflow job:
+  #
+  # permissions:
+  #   contents: read
+  #   pull-requests: write
+  #
+  # You can also check out https://github.com/neondatabase/schema-diff-action for more
+  # information on how to use the schema diff action.
+  # You can uncomment the lines below to enable the schema diff action.
+  #      - name: Post Schema Diff Comment to PR
+  #        uses: neondatabase/schema-diff-action@v1
+  #        with:
+  #          project_id: ${{ vars.NEON_PROJECT_ID }}
+  #          compare_branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+  #          api_key: ${{ secrets.NEON_API_KEY }}
+
+  delete_neon_branch:
+    name: Delete Neon Branch
+    needs: setup
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Neon Branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}

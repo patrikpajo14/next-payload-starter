@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent worktrees and skills hold their own build output and copies of the repo.
+    ".claude/**",
   ]),
   {
     // Tests pass optional variables on to child processes, where "" is the value.
