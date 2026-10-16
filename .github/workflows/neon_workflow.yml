@@ -18,9 +18,13 @@ jobs:
       branch: ${{ steps.branch_name.outputs.current_branch }}
     runs-on: ubuntu-latest
     steps:
+      # Read through env, never inside the script: a branch name is attacker-controlled
+      # on a fork pull request, and tj-actions/branch-names@v8 runs it as shell code.
       - name: Get branch name
         id: branch_name
-        uses: tj-actions/branch-names@v8
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: echo "current_branch=$HEAD_REF" >> "$GITHUB_OUTPUT"
 
   create_neon_branch:
     name: Create Neon Branch
