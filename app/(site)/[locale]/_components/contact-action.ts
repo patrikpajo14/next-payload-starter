@@ -1,11 +1,14 @@
 "use server";
 
 import config from "@payload-config";
+import { headers } from "next/headers";
 import { getPayload } from "payload";
 
 import { CONTACT_FIELDS, validateContactForm } from "@/lib/contact-form";
 import type { ContactField } from "@/lib/contact-form";
 import { hasLocale } from "@/lib/i18n/locales";
+import { clientIp, hashIp } from "@/lib/ip-hash";
+import { requireEnv } from "@/lib/require-env";
 
 export interface ContactFormState {
   status: "idle" | "success" | "invalid" | "failed";
@@ -16,7 +19,8 @@ export interface ContactFormState {
 
 /**
  * Stores a Contact Submission. A filled honeypot field means a bot: it gets the
- * same success answer as a Visitor, and nothing is stored.
+ * same success answer as a Visitor, and nothing is stored. The Visitor's IP
+ * address is stored only as a salted hash.
  */
 export async function submitContactForm(
   _previous: ContactFormState,
@@ -40,9 +44,11 @@ export async function submitContactForm(
 
   const payload = await getPayload({ config });
   try {
+    const ip = clientIp(await headers());
+    const ipHash = ip ? hashIp(ip, requireEnv("IP_HASH_SALT")) : undefined;
     await payload.create({
       collection: "contact-submissions",
-      data: { ...result.data, visitorLocale: locale },
+      data: { ...result.data, visitorLocale: locale, ipHash },
       // The collection denies create to everyone: this action is the only
       // writer, and has already run the honeypot and validation above.
       overrideAccess: true,

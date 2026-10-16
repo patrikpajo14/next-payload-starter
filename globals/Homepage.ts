@@ -1,4 +1,4 @@
-import type { Block, Field, GlobalConfig } from "payload";
+import type { Access, Block, Field, GlobalConfig } from "payload";
 
 import { revalidateAllPagesAfterChange } from "../lib/cache";
 
@@ -119,10 +119,24 @@ const BannerSection: Block = {
   ],
 };
 
+/** Editors (signed in) read the Homepage's Drafts; Visitors read only what is published. */
+const publishedUnlessEditor: Access = ({ req }) =>
+  req.user ? true : { _status: { equals: "published" } };
+
 export const Homepage: GlobalConfig = {
   slug: "homepage",
   // Visitors read it through the Local API with `overrideAccess: false`.
-  access: { read: () => true },
+  access: { read: publishedUnlessEditor },
+  // Editors prepare changes as a Draft and preview them; Visitors read only
+  // what is published. Homepage only: Header and Footer go live on save.
+  versions: { drafts: true },
+  admin: {
+    livePreview: {
+      // Signs the Editor into Next's Draft Mode, then redirects to the
+      // Locale's Homepage (`/hr`, `/en`), which then reads the latest Draft.
+      url: ({ locale }) => `/api/preview?locale=${locale.code}`,
+    },
+  },
   fields: [
     {
       name: "sections",

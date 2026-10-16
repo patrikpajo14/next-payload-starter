@@ -194,6 +194,7 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -278,6 +279,10 @@ export interface Article {
    * The Article the Contact Form's consent checkbox links to.
    */
   privacyPolicy?: (number | null) | Article;
+  /**
+   * Featured Articles can be picked out by Sections of the Homepage.
+   */
+  featured?: boolean | null;
   publishedAt: string;
   updatedAt: string;
   createdAt: string;
@@ -300,6 +305,7 @@ export interface ContactSubmission {
    * The Locale the Visitor was reading when they sent the message.
    */
   visitorLocale: 'hr' | 'en';
+  ipHash?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -418,6 +424,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -477,6 +484,7 @@ export interface ArticlesSelect<T extends boolean = true> {
   category?: T;
   showContactForm?: T;
   privacyPolicy?: T;
+  featured?: T;
   publishedAt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -495,6 +503,7 @@ export interface ContactSubmissionsSelect<T extends boolean = true> {
   postalCode?: T;
   message?: T;
   visitorLocale?: T;
+  ipHash?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -578,6 +587,7 @@ export interface Footer {
 export interface Homepage {
   id: number;
   sections?: (HeroSection | ProductsSliderSection | SolutionsSection | FaqSection | BannerSection)[] | null;
+  _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -694,6 +704,7 @@ export interface HomepageSelect<T extends boolean = true> {
         faq?: T | FaqSectionSelect<T>;
         banner?: T | BannerSectionSelect<T>;
       };
+  _status?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

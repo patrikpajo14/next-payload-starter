@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { locales } from "@/lib/i18n/locales";
 import { getLocale, getMessages } from "@/lib/i18n/server";
 
+import { PreviewBanner } from "./_components/PreviewBanner";
 import { SiteFooter } from "./_components/SiteFooter";
 import { SiteHeader } from "./_components/SiteHeader";
 import "./globals.css";
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col overflow-x-clip">
+        <PreviewBanner />
         <SiteHeader />
         {children}
         <SiteFooter />

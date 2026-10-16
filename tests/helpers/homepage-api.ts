@@ -27,7 +27,20 @@ export async function saveSections(
 ) {
   const response = await request.post(`/api/globals/homepage?locale=${locale}`, {
     headers: await editorHeaders(request),
-    data: { sections },
+    data: { sections, _status: "published" },
+  });
+  expect(response.ok()).toBe(true);
+}
+
+/** Saves the Homepage as a Draft, like the admin's Save Draft: Visitors keep the published version. */
+export async function saveDraftSections(
+  request: APIRequestContext,
+  locale: Locale,
+  sections: SectionData[],
+) {
+  const response = await request.post(`/api/globals/homepage?locale=${locale}&draft=true`, {
+    headers: await editorHeaders(request),
+    data: { sections, _status: "draft" },
   });
   expect(response.ok()).toBe(true);
 }

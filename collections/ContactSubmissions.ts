@@ -5,7 +5,8 @@ import { locales } from "../lib/i18n/locales";
 /**
  * Messages Visitors send through the Contact Form. Nobody creates one through
  * the API: the `submitContactForm` server action writes with `overrideAccess`,
- * after the honeypot and validation. Only Editors (signed in) can read or
+ * after the honeypot and validation, and it stores a salted hash of the
+ * Visitor's IP address in `ipHash`. Only Editors (signed in) can read or
  * delete them, and nobody edits them.
  */
 export const ContactSubmissions: CollectionConfig = {
@@ -35,6 +36,15 @@ export const ContactSubmissions: CollectionConfig = {
       required: true,
       options: locales.map((code) => ({ label: code.toUpperCase(), value: code })),
       admin: { description: "The Locale the Visitor was reading when they sent the message." },
+    },
+    {
+      name: "ipHash",
+      type: "text",
+      // Written by the server action only. No read access, so neither the admin
+      // nor the REST API returns it to Editors; Local API calls that override
+      // access can still read it.
+      access: { read: () => false, create: () => false, update: () => false },
+      admin: { hidden: true },
     },
   ],
 };

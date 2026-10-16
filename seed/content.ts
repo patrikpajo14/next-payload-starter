@@ -223,6 +223,7 @@ async function seedHomepage(payload: Payload, coverId: number, contactId: number
     slug: "homepage",
     locale: "hr",
     data: {
+      _status: "published",
       sections: [
         {
           blockType: "hero",
@@ -277,6 +278,7 @@ async function seedHomepage(payload: Payload, coverId: number, contactId: number
     slug: "homepage",
     locale: "en",
     data: {
+      _status: "published",
       sections: [
         {
           blockType: "hero",
