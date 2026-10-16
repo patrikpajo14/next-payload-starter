@@ -91,6 +91,7 @@ In CI (`.github/workflows/test.yml`) every run creates its own Neon branch from 
 | `pnpm dev` | Dev server |
 | `pnpm build` / `pnpm start` | Production build and server |
 | `pnpm seed` | Fill an empty database with starter content |
+| `pnpm publish-homepage` | Publish a Homepage saved before it had Drafts. Run once on a database that predates Homepage Drafts, or its Sections stay hidden from Visitors |
 | `pnpm typecheck` | Generate route types and run `tsc` |
 | `pnpm generate:types` | Regenerate `payload-types.ts` after changing a collection or global |
 | `pnpm lint` | ESLint |
