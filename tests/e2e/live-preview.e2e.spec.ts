@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { signInAsEditor } from "../helpers/admin";
+import { editorHeaders } from "../helpers/editor-api";
 import { homepageSections, saveDraftSections, saveSections } from "../helpers/homepage-api";
 import type { SectionData } from "../helpers/homepage-api";
 
@@ -17,6 +18,13 @@ test.describe("Homepage Live Preview", () => {
   // Publishing the seeded Sections again also replaces any Draft.
   test.afterEach(async ({ request }) => {
     await saveSections(request, "en", seeded);
+    // Opening the admin in English stores English as the Editor's admin Locale,
+    // and later admin specs would then type their titles into English fields.
+    const reset = await request.post("/api/payload-preferences/locale", {
+      headers: await editorHeaders(request),
+      data: { value: "hr" },
+    });
+    expect(reset.ok()).toBe(true);
   });
 
   test("refuses Draft Mode to a Visitor", async ({ playwright, baseURL }) => {

@@ -3,12 +3,6 @@ import { redirect } from "next/navigation";
 
 import { getLocale, getMessages } from "@/lib/i18n/server";
 
-async function exitPreview() {
-  "use server";
-  (await draftMode()).disable();
-  redirect(`/${await getLocale()}`);
-}
-
 /**
  * Tells an Editor in Draft Mode that they see Drafts, and lets them leave it.
  * Draft Mode outlives the admin tab (until the browser closes), so without this
@@ -17,7 +11,16 @@ async function exitPreview() {
 export async function PreviewBanner() {
   const { isEnabled } = await draftMode();
   if (!isEnabled) return null;
+  const locale = await getLocale();
   const t = await getMessages();
+
+  // `getLocale()` reads the request's route params, which a Server Action
+  // doesn't have, so the Locale is read here and the action closes over it.
+  async function exitPreview() {
+    "use server";
+    (await draftMode()).disable();
+    redirect(`/${locale}`);
+  }
 
   return (
     <aside
